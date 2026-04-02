@@ -10,8 +10,8 @@ use bytes::{Bytes, BytesMut};
 use oxidized_codec::types::{self, TypeError};
 
 use crate::block_pos::BlockPos;
-use crate::chunk_pos::ChunkPos;
 use crate::vec3i::Vec3i;
+use oxidized_types::ChunkPos;
 
 /// Number of bits per axis within a section (log2(16) = 4).
 pub const SECTION_BITS: u32 = 4;

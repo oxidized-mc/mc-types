@@ -1,15 +1,14 @@
-//! [`ChunkPos`] — re-exported from [`oxidized_types`] with protocol wire methods.
+//! [`ChunkPos`] extensions for the Minecraft wire protocol.
 //!
-//! The core `ChunkPos` type lives in `oxidized-types` (shared across crates).
-//! This module re-exports it and adds wire-format read/write and `BlockPos` conversion.
+//! The core [`ChunkPos`] type lives in [`oxidized_types`]. This module
+//! adds wire-format read/write and [`BlockPos`] conversion via [`ChunkPosExt`].
 
 use bytes::{Bytes, BytesMut};
 
 use oxidized_codec::types::{self, TypeError};
+use oxidized_types::ChunkPos;
 
 use crate::block_pos::BlockPos;
-
-pub use oxidized_types::ChunkPos;
 
 /// Wire-format extension methods for [`ChunkPos`].
 pub trait ChunkPosExt {

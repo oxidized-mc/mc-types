@@ -7,7 +7,7 @@ use std::fmt;
 
 use bytes::{Bytes, BytesMut};
 
-pub use oxidized_codec::ResourceLocationError;
+use oxidized_codec::ResourceLocationError;
 use oxidized_codec::types;
 
 /// The default namespace used when no colon is present in a resource location

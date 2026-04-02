@@ -25,7 +25,7 @@ pub mod vec3i;
 pub use aabb::Aabb;
 pub use block_pos::BlockPos;
 pub use chat_visibility::ChatVisibility;
-pub use chunk_pos::ChunkPos;
+pub use chunk_pos::ChunkPosExt;
 pub use difficulty::Difficulty;
 pub use direction::{Axis, AxisDirection, Direction};
 pub use game_type::GameType;
