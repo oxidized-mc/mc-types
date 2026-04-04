@@ -57,3 +57,4 @@ oxidized-types = { path = "../types" }
 
 [patch."https://github.com/oxidized-mc/nbt.git"]
 oxidized-nbt = { path = "../nbt" }
+
