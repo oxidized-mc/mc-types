@@ -13,8 +13,8 @@ categories   = ["game-development"]
 
 [dependencies]
 bytes         = "1"
-oxidized-codec       = { git = "https://github.com/oxidized-mc/codec.git" }
-oxidized-types       = { git = "https://github.com/oxidized-mc/types.git" }
+oxidized-codec       = "0.1.0-dev"
+oxidized-types       = "0.1.0-dev"
 thiserror     = "2"
 
 [dev-dependencies]
@@ -49,12 +49,7 @@ cast_possible_truncation   = "allow"
 cast_sign_loss             = "allow"
 cast_possible_wrap         = "allow"
 
-[patch."https://github.com/oxidized-mc/codec.git"]
+[patch.crates-io]
 oxidized-codec = { path = "../codec" }
-
-[patch."https://github.com/oxidized-mc/types.git"]
-oxidized-types = { path = "../types" }
-
-[patch."https://github.com/oxidized-mc/nbt.git"]
 oxidized-nbt = { path = "../nbt" }
-
+oxidized-types = { path = "../types" }
