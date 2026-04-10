@@ -134,7 +134,8 @@ impl Vec3 {
 
     /// Returns the normalized (unit-length) vector.
     ///
-    /// Returns [`Vec3::ZERO`] if the length is less than `1e-8`.
+    /// Returns [`Vec3::ZERO`] if the length is less than `1e-4`, matching
+    /// vanilla's zero-length threshold.
     ///
     /// # Examples
     ///
@@ -147,7 +148,7 @@ impl Vec3 {
     /// ```
     pub fn normalize(self) -> Self {
         let len = self.length();
-        if len < 1e-8 {
+        if len < 1e-4 {
             return Vec3::ZERO;
         }
         self.scale(1.0 / len)
@@ -389,6 +390,22 @@ mod tests {
     #[test]
     fn test_vec3_normalize_zero_returns_zero() {
         assert_eq!(Vec3::ZERO.normalize(), Vec3::ZERO);
+    }
+
+    #[test]
+    fn test_vec3_normalize_below_threshold_returns_zero() {
+        // Vanilla Vec3.normalize() returns ZERO for lengths below 1.0E-4.
+        // A vector (1e-5, 0, 0) has length 1e-5 which is below the threshold.
+        let tiny = Vec3::new(1e-5, 0.0, 0.0);
+        assert_eq!(tiny.normalize(), Vec3::ZERO);
+    }
+
+    #[test]
+    fn test_vec3_normalize_above_threshold_normalizes() {
+        // A vector with length >= 1e-4 should normalize to unit length.
+        let v = Vec3::new(1e-3, 0.0, 0.0);
+        let n = v.normalize();
+        assert!((n.length() - 1.0).abs() < 1e-9);
     }
 
     // ── Length ───────────────────────────────────────────────────────
