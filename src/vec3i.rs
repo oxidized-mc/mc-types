@@ -42,6 +42,7 @@ impl Vec3i {
     pub const ZERO: Vec3i = Vec3i { x: 0, y: 0, z: 0 };
 
     /// Creates a new `Vec3i`.
+    #[inline]
     pub const fn new(x: i32, y: i32, z: i32) -> Self {
         Self { x, y, z }
     }
@@ -51,6 +52,7 @@ impl Vec3i {
     /// Uses wrapping arithmetic to match vanilla Java behavior.
     /// In practice, Minecraft coordinates are bounded by the world border (±30M)
     /// and overflow cannot occur with valid game coordinates.
+    #[inline]
     pub const fn offset(self, dx: i32, dy: i32, dz: i32) -> Self {
         Self::new(
             self.x.wrapping_add(dx),
@@ -62,6 +64,7 @@ impl Vec3i {
     /// Returns the sum of this vector and `other`.
     ///
     /// Uses wrapping arithmetic to match vanilla Java behavior.
+    #[inline]
     pub const fn add_vec(self, other: Vec3i) -> Self {
         self.offset(other.x, other.y, other.z)
     }
@@ -69,6 +72,7 @@ impl Vec3i {
     /// Returns the difference of this vector and `other`.
     ///
     /// Uses wrapping arithmetic to match vanilla Java behavior.
+    #[inline]
     pub const fn subtract_vec(self, other: Vec3i) -> Self {
         Self::new(
             self.x.wrapping_sub(other.x),
@@ -78,11 +82,13 @@ impl Vec3i {
     }
 
     /// Returns the position offset by one step in the given direction.
+    #[inline]
     pub fn relative(self, dir: Direction) -> Self {
         self.offset(dir.step_x(), dir.step_y(), dir.step_z())
     }
 
     /// Returns the position offset by `steps` in the given direction.
+    #[inline]
     pub fn relative_steps(self, dir: Direction, steps: i32) -> Self {
         self.offset(
             dir.step_x().wrapping_mul(steps),
@@ -95,6 +101,7 @@ impl Vec3i {
     ///
     /// Uses wrapping arithmetic. In practice, cross products are only used
     /// with small direction/normal vectors where overflow cannot occur.
+    #[inline]
     pub const fn cross(self, other: Vec3i) -> Self {
         Self::new(
             self.y
@@ -112,6 +119,7 @@ impl Vec3i {
     /// Returns the squared Euclidean distance to `other`.
     ///
     /// Uses `i64` arithmetic to avoid overflow for large coordinates.
+    #[inline]
     pub fn dist_sqr(self, other: Vec3i) -> i64 {
         let dx = i64::from(self.x) - i64::from(other.x);
         let dy = i64::from(self.y) - i64::from(other.y);
@@ -122,6 +130,7 @@ impl Vec3i {
     /// Returns the Manhattan (L1) distance to `other`.
     ///
     /// Uses `i64` arithmetic internally to avoid overflow with extreme coordinates.
+    #[inline]
     pub fn dist_manhattan(self, other: Vec3i) -> i64 {
         let dx = (i64::from(self.x) - i64::from(other.x)).abs();
         let dy = (i64::from(self.y) - i64::from(other.y)).abs();
@@ -132,6 +141,7 @@ impl Vec3i {
     /// Returns the Chebyshev (chessboard / L∞) distance to `other`.
     ///
     /// Uses `i64` arithmetic internally to avoid overflow with extreme coordinates.
+    #[inline]
     pub fn dist_chessboard(self, other: Vec3i) -> i64 {
         let dx = (i64::from(self.x) - i64::from(other.x)).abs();
         let dy = (i64::from(self.y) - i64::from(other.y)).abs();
@@ -148,6 +158,7 @@ impl Vec3i {
     /// Returns a new vector with all components multiplied by `scale`.
     ///
     /// Uses wrapping arithmetic to match vanilla Java behavior.
+    #[inline]
     pub const fn multiply(self, scale: i32) -> Self {
         Self::new(
             self.x.wrapping_mul(scale),

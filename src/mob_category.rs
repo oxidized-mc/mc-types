@@ -67,11 +67,13 @@ impl MobCategory {
     ];
 
     /// Returns the numeric ID (ordinal) of this category.
+    #[inline]
     pub const fn id(self) -> i32 {
         self as i32
     }
 
     /// The serialized name of this category (e.g., `"monster"`, `"creature"`).
+    #[inline]
     pub const fn name(self) -> &'static str {
         match self {
             Self::Monster => "monster",
@@ -88,6 +90,7 @@ impl MobCategory {
     /// Maximum mob instances per chunk for this category.
     ///
     /// Returns −1 for [`MobCategory::Misc`] (unlimited).
+    #[inline]
     pub const fn max_instances_per_chunk(self) -> i32 {
         match self {
             Self::Monster => 70,
@@ -102,16 +105,19 @@ impl MobCategory {
     }
 
     /// Whether mobs in this category are friendly (non-hostile).
+    #[inline]
     pub const fn is_friendly(self) -> bool {
         !matches!(self, Self::Monster)
     }
 
     /// Whether mobs in this category are persistent (don't despawn naturally).
+    #[inline]
     pub const fn is_persistent(self) -> bool {
         matches!(self, Self::Creature | Self::Misc)
     }
 
     /// The distance (in blocks) at which mobs in this category despawn.
+    #[inline]
     pub const fn despawn_distance(self) -> i32 {
         match self {
             Self::WaterAmbient => 64,
@@ -122,11 +128,13 @@ impl MobCategory {
     /// The distance (in blocks) within which mobs never despawn.
     ///
     /// Always returns 32 for all categories.
+    #[inline]
     pub const fn no_despawn_distance(self) -> i32 {
         NO_DESPAWN_DISTANCE
     }
 
     /// Looks up a category by its numeric ID.
+    #[inline]
     pub const fn by_id(id: i32) -> Option<Self> {
         match id {
             0 => Some(Self::Monster),
@@ -142,6 +150,7 @@ impl MobCategory {
     }
 
     /// Looks up a category by its serialized name.
+    #[inline]
     pub fn by_name(name: &str) -> Option<Self> {
         match name {
             "monster" => Some(Self::Monster),

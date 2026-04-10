@@ -49,6 +49,7 @@ pub struct BlockHitResult {
 
 impl BlockHitResult {
     /// Creates a miss result at the given location.
+    #[inline]
     pub fn miss(location: Vec3, direction: Direction, block_pos: BlockPos) -> Self {
         Self {
             location,
@@ -61,6 +62,7 @@ impl BlockHitResult {
     }
 
     /// Creates a hit result at the given location.
+    #[inline]
     pub fn hit(location: Vec3, direction: Direction, block_pos: BlockPos) -> Self {
         Self {
             location,
@@ -73,6 +75,7 @@ impl BlockHitResult {
     }
 
     /// Creates a hit result at the given location, originating from inside the block.
+    #[inline]
     pub fn hit_inside(location: Vec3, direction: Direction, block_pos: BlockPos) -> Self {
         Self {
             location,
@@ -85,16 +88,19 @@ impl BlockHitResult {
     }
 
     /// Whether this result represents a miss.
+    #[inline]
     pub fn is_miss(&self) -> bool {
         self.miss
     }
 
     /// Whether this hit was against the world border.
+    #[inline]
     pub fn is_world_border_hit(&self) -> bool {
         self.world_border_hit
     }
 
     /// Returns a copy with `world_border_hit` set to `true`.
+    #[inline]
     pub fn hit_border(self) -> Self {
         Self {
             world_border_hit: true,
@@ -103,6 +109,7 @@ impl BlockHitResult {
     }
 
     /// Returns the hit result type discriminant.
+    #[inline]
     pub fn get_type(&self) -> HitResultType {
         if self.miss {
             HitResultType::Miss
@@ -112,11 +119,13 @@ impl BlockHitResult {
     }
 
     /// Returns a copy with the direction replaced.
+    #[inline]
     pub fn with_direction(self, direction: Direction) -> Self {
         Self { direction, ..self }
     }
 
     /// Returns a copy with the block position replaced.
+    #[inline]
     pub fn with_position(self, pos: BlockPos) -> Self {
         Self {
             block_pos: pos,

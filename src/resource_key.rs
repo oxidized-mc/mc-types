@@ -66,16 +66,19 @@ impl<T> ResourceKey<T> {
     }
 
     /// The registry this key belongs to.
+    #[inline]
     pub fn registry(&self) -> &ResourceLocation {
         &self.registry
     }
 
     /// The specific entry within the registry.
+    #[inline]
     pub fn location(&self) -> &ResourceLocation {
         &self.location
     }
 
     /// Whether this key belongs to the given registry.
+    #[inline]
     pub fn is_for(&self, registry: &ResourceLocation) -> bool {
         self.registry == *registry
     }

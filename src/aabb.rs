@@ -31,11 +31,15 @@ fn contract_axis(min: f64, max: f64, delta: f64) -> (f64, f64) {
     }
 }
 
+/// Threshold below which a ray direction component is treated as parallel to
+/// the slab. Matches vanilla's `AABB.EPSILON`.
+const EPSILON: f64 = 1.0e-7;
+
 /// Computes the entry and exit t-values for a ray against one axis slab.
 ///
 /// Returns `None` when the ray is parallel to the slab (direction ≈ 0).
 fn clip_axis(origin: f64, dir: f64, slab_min: f64, slab_max: f64) -> Option<(f64, f64)> {
-    if dir.abs() < 1.0e-7 {
+    if dir.abs() < EPSILON {
         return None;
     }
     let inv_dir = 1.0 / dir;
@@ -79,6 +83,7 @@ impl Aabb {
     /// assert_eq!(bb.x_size(), 1.0);
     /// assert_eq!(bb.y_size(), 2.0);
     /// ```
+    #[inline]
     pub fn new(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Self {
         Self {
             min_x: x1.min(x2),
@@ -91,6 +96,7 @@ impl Aabb {
     }
 
     /// Creates a unit cube (1×1×1) at the given [`BlockPos`].
+    #[inline]
     pub fn from_block_pos(pos: &BlockPos) -> Self {
         Self {
             min_x: f64::from(pos.x),
@@ -103,11 +109,13 @@ impl Aabb {
     }
 
     /// Creates an [`Aabb`] spanning between two [`Vec3`] corners.
+    #[inline]
     pub fn from_vec3(a: Vec3, b: Vec3) -> Self {
         Self::new(a.x, a.y, a.z, b.x, b.y, b.z)
     }
 
     /// Creates a unit cube (1×1×1) at the given coordinates.
+    #[inline]
     pub fn unit_cube_at(x: f64, y: f64, z: f64) -> Self {
         Self {
             min_x: x,
@@ -120,26 +128,31 @@ impl Aabb {
     }
 
     /// Returns the size along the X axis.
+    #[inline]
     pub fn x_size(&self) -> f64 {
         self.max_x - self.min_x
     }
 
     /// Returns the size along the Y axis.
+    #[inline]
     pub fn y_size(&self) -> f64 {
         self.max_y - self.min_y
     }
 
     /// Returns the size along the Z axis.
+    #[inline]
     pub fn z_size(&self) -> f64 {
         self.max_z - self.min_z
     }
 
     /// Returns the average of the three axis sizes (as in vanilla).
+    #[inline]
     pub fn size(&self) -> f64 {
         (self.x_size() + self.y_size() + self.z_size()) / 3.0
     }
 
     /// Returns the volume of this bounding box.
+    #[inline]
     pub fn volume(&self) -> f64 {
         self.x_size() * self.y_size() * self.z_size()
     }
@@ -159,6 +172,7 @@ impl Aabb {
     /// assert!((bbox.min_x - 4.7).abs() < 1e-10);
     /// assert!((bbox.max_y - 65.8).abs() < 1e-10);
     /// ```
+    #[inline]
     pub fn from_center(x: f64, y: f64, z: f64, width: f64, height: f64) -> Self {
         let half_w = width / 2.0;
         Self {
@@ -172,6 +186,7 @@ impl Aabb {
     }
 
     /// Returns the center of this bounding box.
+    #[inline]
     pub fn get_center(&self) -> Vec3 {
         Vec3::new(
             (self.min_x + self.max_x) / 2.0,
@@ -181,6 +196,7 @@ impl Aabb {
     }
 
     /// Returns the bottom center of this bounding box (center X/Z, min Y).
+    #[inline]
     pub fn get_bottom_center(&self) -> Vec3 {
         Vec3::new(
             (self.min_x + self.max_x) / 2.0,
@@ -190,16 +206,19 @@ impl Aabb {
     }
 
     /// Returns the minimum corner as a [`Vec3`].
+    #[inline]
     pub fn get_min_position(&self) -> Vec3 {
         Vec3::new(self.min_x, self.min_y, self.min_z)
     }
 
     /// Returns the maximum corner as a [`Vec3`].
+    #[inline]
     pub fn get_max_position(&self) -> Vec3 {
         Vec3::new(self.max_x, self.max_y, self.max_z)
     }
 
     /// Returns the minimum value on the given axis.
+    #[inline]
     pub fn min_axis(&self, axis: Axis) -> f64 {
         match axis {
             Axis::X => self.min_x,
@@ -209,6 +228,7 @@ impl Aabb {
     }
 
     /// Returns the maximum value on the given axis.
+    #[inline]
     pub fn max_axis(&self, axis: Axis) -> f64 {
         match axis {
             Axis::X => self.max_x,
@@ -228,11 +248,13 @@ impl Aabb {
     /// let bigger = bb.inflate(0.5);
     /// assert_eq!(bigger.x_size(), 2.0);
     /// ```
+    #[inline]
     pub fn inflate(&self, amount: f64) -> Self {
         self.inflate_xyz(amount, amount, amount)
     }
 
     /// Returns a new [`Aabb`] expanded by the given amounts on each axis.
+    #[inline]
     pub fn inflate_xyz(&self, x: f64, y: f64, z: f64) -> Self {
         Self {
             min_x: self.min_x - x,
@@ -245,6 +267,7 @@ impl Aabb {
     }
 
     /// Returns a new [`Aabb`] shrunk equally on all sides by `amount`.
+    #[inline]
     pub fn deflate(&self, amount: f64) -> Self {
         self.inflate(-amount)
     }
@@ -253,6 +276,7 @@ impl Aabb {
     ///
     /// For each axis, if the delta is negative the min is extended; if positive
     /// the max is extended.
+    #[inline]
     pub fn expand_towards(&self, dx: f64, dy: f64, dz: f64) -> Self {
         let (min_x, max_x) = expand_axis(self.min_x, self.max_x, dx);
         let (min_y, max_y) = expand_axis(self.min_y, self.max_y, dy);
@@ -271,6 +295,7 @@ impl Aabb {
     ///
     /// For each axis, if the delta is negative the min side shrinks inward
     /// (min increases); if positive the max side shrinks inward (max decreases).
+    #[inline]
     pub fn contract(&self, dx: f64, dy: f64, dz: f64) -> Self {
         let (min_x, max_x) = contract_axis(self.min_x, self.max_x, dx);
         let (min_y, max_y) = contract_axis(self.min_y, self.max_y, dy);
@@ -286,6 +311,7 @@ impl Aabb {
     }
 
     /// Returns a new [`Aabb`] translated by `(dx, dy, dz)`.
+    #[inline]
     pub fn move_by(&self, dx: f64, dy: f64, dz: f64) -> Self {
         Self {
             min_x: self.min_x + dx,
@@ -298,6 +324,7 @@ impl Aabb {
     }
 
     /// Returns a new [`Aabb`] translated by the given [`Vec3`].
+    #[inline]
     pub fn move_vec(&self, delta: Vec3) -> Self {
         self.move_by(delta.x, delta.y, delta.z)
     }
@@ -305,6 +332,7 @@ impl Aabb {
     /// Returns `true` if this bounding box overlaps with `other`.
     ///
     /// Touching (sharing an edge or face) is **not** considered overlapping.
+    #[inline]
     pub fn intersects(&self, other: &Aabb) -> bool {
         self.intersects_range(
             other.min_x,
@@ -317,6 +345,7 @@ impl Aabb {
     }
 
     /// Returns `true` if this bounding box overlaps with the given range.
+    #[inline]
     pub fn intersects_range(
         &self,
         min_x: f64,
@@ -339,6 +368,7 @@ impl Aabb {
     /// The min boundary is inclusive and the max boundary is exclusive,
     /// matching vanilla's half-open interval semantics. This ensures every
     /// point belongs to at most one AABB when boxes are adjacent.
+    #[inline]
     pub fn contains(&self, x: f64, y: f64, z: f64) -> bool {
         x >= self.min_x
             && x < self.max_x
@@ -349,6 +379,7 @@ impl Aabb {
     }
 
     /// Returns `true` if the given [`Vec3`] is inside this bounding box.
+    #[inline]
     pub fn contains_vec(&self, pos: Vec3) -> bool {
         self.contains(pos.x, pos.y, pos.z)
     }
@@ -357,6 +388,7 @@ impl Aabb {
     ///
     /// If the boxes do not overlap, the result is auto-corrected to a valid
     /// AABB (min ≤ max on each axis) by [`Aabb::new`].
+    #[inline]
     pub fn intersect(&self, other: &Aabb) -> Self {
         Self::new(
             self.min_x.max(other.min_x),
@@ -369,6 +401,7 @@ impl Aabb {
     }
 
     /// Returns the smallest bounding box that contains both `self` and `other`.
+    #[inline]
     pub fn minmax(&self, other: &Aabb) -> Self {
         Self {
             min_x: self.min_x.min(other.min_x),
@@ -384,6 +417,7 @@ impl Aabb {
     /// surface of this bounding box.
     ///
     /// Returns `0.0` if the point is inside the box.
+    #[inline]
     pub fn distance_to_sqr(&self, pos: Vec3) -> f64 {
         let dx = 0.0_f64.max(self.min_x - pos.x).max(pos.x - self.max_x);
         let dy = 0.0_f64.max(self.min_y - pos.y).max(pos.y - self.max_y);
@@ -392,6 +426,7 @@ impl Aabb {
     }
 
     /// Whether any coordinate component is NaN.
+    #[inline]
     pub fn has_nan(&self) -> bool {
         self.min_x.is_nan()
             || self.min_y.is_nan()
@@ -402,6 +437,7 @@ impl Aabb {
     }
 
     /// Returns the size along a specific axis.
+    #[inline]
     pub fn get_size(&self, axis: Axis) -> f64 {
         match axis {
             Axis::X => self.x_size(),

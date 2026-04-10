@@ -69,41 +69,49 @@ impl Vec3 {
     };
 
     /// Creates a new `Vec3`.
+    #[inline]
     pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
 
     /// Returns a new vector with the given offsets added.
+    #[inline]
     pub fn add(self, dx: f64, dy: f64, dz: f64) -> Self {
         Self::new(self.x + dx, self.y + dy, self.z + dz)
     }
 
     /// Returns the sum of this vector and `other`.
+    #[inline]
     pub fn add_vec(self, other: Vec3) -> Self {
         Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
     }
 
     /// Returns a new vector with the given offsets subtracted.
+    #[inline]
     pub fn subtract(self, dx: f64, dy: f64, dz: f64) -> Self {
         Self::new(self.x - dx, self.y - dy, self.z - dz)
     }
 
     /// Returns the difference of this vector and `other`.
+    #[inline]
     pub fn subtract_vec(self, other: Vec3) -> Self {
         Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 
     /// Returns the negation of this vector.
+    #[inline]
     pub fn negate(self) -> Self {
         Self::new(-self.x, -self.y, -self.z)
     }
 
     /// Returns a new vector scaled by `factor`.
+    #[inline]
     pub fn scale(self, factor: f64) -> Self {
         Self::new(self.x * factor, self.y * factor, self.z * factor)
     }
 
     /// Returns a new vector with each component multiplied independently.
+    #[inline]
     pub fn multiply(self, x: f64, y: f64, z: f64) -> Self {
         Self::new(self.x * x, self.y * y, self.z * z)
     }
@@ -119,11 +127,13 @@ impl Vec3 {
     /// let b = Vec3::new(0.0, 1.0, 0.0);
     /// assert_eq!(a.dot(b), 0.0); // perpendicular
     /// ```
+    #[inline]
     pub fn dot(self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     /// Returns the cross product of this vector and `other`.
+    #[inline]
     pub fn cross(self, other: Vec3) -> Self {
         Self::new(
             self.y * other.z - self.z * other.y,
@@ -146,6 +156,7 @@ impl Vec3 {
     /// let n = v.normalize();
     /// assert!((n.length() - 1.0).abs() < 1e-9);
     /// ```
+    #[inline]
     pub fn normalize(self) -> Self {
         let len = self.length();
         if len < 1e-4 {
@@ -155,21 +166,25 @@ impl Vec3 {
     }
 
     /// Returns the Euclidean length of this vector.
+    #[inline]
     pub fn length(self) -> f64 {
         self.length_sqr().sqrt()
     }
 
     /// Returns the squared Euclidean length of this vector.
+    #[inline]
     pub fn length_sqr(self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     /// Returns the Euclidean distance to `other`.
+    #[inline]
     pub fn distance_to(self, other: Vec3) -> f64 {
         self.distance_to_sqr(other).sqrt()
     }
 
     /// Returns the squared Euclidean distance to `other`.
+    #[inline]
     pub fn distance_to_sqr(self, other: Vec3) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -178,21 +193,25 @@ impl Vec3 {
     }
 
     /// Returns the horizontal distance (in the XZ plane).
+    #[inline]
     pub fn horizontal_distance(self) -> f64 {
         self.horizontal_distance_sqr().sqrt()
     }
 
     /// Returns the squared horizontal distance (in the XZ plane).
+    #[inline]
     pub fn horizontal_distance_sqr(self) -> f64 {
         self.x * self.x + self.z * self.z
     }
 
     /// Returns `true` if the distance to `other` is less than `distance`.
+    #[inline]
     pub fn closer_than(self, other: Vec3, distance: f64) -> bool {
         self.distance_to_sqr(other) < distance * distance
     }
 
     /// Rotates this vector around the X axis by `radians`.
+    #[inline]
     pub fn x_rot(self, radians: f64) -> Self {
         let cos = radians.cos();
         let sin = radians.sin();
@@ -204,6 +223,7 @@ impl Vec3 {
     }
 
     /// Rotates this vector around the Y axis by `radians`.
+    #[inline]
     pub fn y_rot(self, radians: f64) -> Self {
         let cos = radians.cos();
         let sin = radians.sin();
@@ -215,6 +235,7 @@ impl Vec3 {
     }
 
     /// Rotates this vector around the Z axis by `radians`.
+    #[inline]
     pub fn z_rot(self, radians: f64) -> Self {
         let cos = radians.cos();
         let sin = radians.sin();
@@ -226,11 +247,13 @@ impl Vec3 {
     }
 
     /// Converts an integer position to its lower corner in double coordinates.
+    #[inline]
     pub fn at_lower_corner_of(pos: &Vec3i) -> Self {
         Self::new(f64::from(pos.x), f64::from(pos.y), f64::from(pos.z))
     }
 
     /// Converts an integer position to its center (each component + 0.5).
+    #[inline]
     pub fn at_center_of(pos: &Vec3i) -> Self {
         Self::new(
             f64::from(pos.x) + 0.5,
@@ -261,6 +284,7 @@ impl Vec3 {
     /// Linear interpolation from `self` to `target` by `delta`.
     ///
     /// `delta = 0.0` → `self`, `delta = 1.0` → `target`.
+    #[inline]
     pub fn lerp(self, target: Vec3, delta: f64) -> Self {
         Self::new(
             self.x + (target.x - self.x) * delta,

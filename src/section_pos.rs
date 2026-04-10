@@ -88,11 +88,13 @@ pub struct SectionPos {
 
 impl SectionPos {
     /// Creates a new [`SectionPos`].
+    #[inline]
     pub const fn new(x: i32, y: i32, z: i32) -> Self {
         Self { x, y, z }
     }
 
     /// Returns the section containing the given [`BlockPos`].
+    #[inline]
     pub const fn of_block_pos(pos: &BlockPos) -> Self {
         Self {
             x: pos.x >> 4,
@@ -102,6 +104,7 @@ impl SectionPos {
     }
 
     /// Returns the section at the given Y level within the given chunk.
+    #[inline]
     pub const fn of_chunk(chunk: &ChunkPos, section_y: i32) -> Self {
         Self {
             x: chunk.x,
@@ -111,6 +114,7 @@ impl SectionPos {
     }
 
     /// Packs this section position into a 64-bit integer.
+    #[inline]
     pub const fn as_long(&self) -> i64 {
         ((self.x as i64 & PACKED_XZ_MASK) << X_OFFSET)
             | ((self.z as i64 & PACKED_XZ_MASK) << Z_OFFSET)
@@ -120,6 +124,7 @@ impl SectionPos {
     /// Unpacks a section position from a 64-bit integer.
     ///
     /// Sign extension is applied to recover negative coordinates.
+    #[inline]
     pub const fn from_long(packed: i64) -> Self {
         let x = (packed >> X_OFFSET) as i32;
         let z =
@@ -129,51 +134,61 @@ impl SectionPos {
     }
 
     /// Converts a block coordinate to a section coordinate.
+    #[inline]
     pub const fn block_to_section_coord(block_coord: i32) -> i32 {
         block_coord >> 4
     }
 
     /// Converts a section coordinate to the minimum block coordinate.
+    #[inline]
     pub const fn section_to_block_coord(section_coord: i32) -> i32 {
         section_coord << 4
     }
 
     /// Returns the section-local offset (0–15) for a block coordinate.
+    #[inline]
     pub const fn section_relative(block_coord: i32) -> i32 {
         block_coord & SECTION_MASK
     }
 
     /// Returns the smallest block X coordinate in this section.
+    #[inline]
     pub const fn min_block_x(&self) -> i32 {
         Self::section_to_block_coord(self.x)
     }
 
     /// Returns the smallest block Y coordinate in this section.
+    #[inline]
     pub const fn min_block_y(&self) -> i32 {
         Self::section_to_block_coord(self.y)
     }
 
     /// Returns the smallest block Z coordinate in this section.
+    #[inline]
     pub const fn min_block_z(&self) -> i32 {
         Self::section_to_block_coord(self.z)
     }
 
     /// Returns the largest block X coordinate in this section.
+    #[inline]
     pub const fn max_block_x(&self) -> i32 {
         self.min_block_x() + 15
     }
 
     /// Returns the largest block Y coordinate in this section.
+    #[inline]
     pub const fn max_block_y(&self) -> i32 {
         self.min_block_y() + 15
     }
 
     /// Returns the largest block Z coordinate in this section.
+    #[inline]
     pub const fn max_block_z(&self) -> i32 {
         self.min_block_z() + 15
     }
 
     /// Returns the center block position of this section.
+    #[inline]
     pub const fn center(&self) -> BlockPos {
         BlockPos::new(
             self.min_block_x() + SECTION_HALF_SIZE,
@@ -183,16 +198,19 @@ impl SectionPos {
     }
 
     /// Returns the origin (minimum corner) block position of this section.
+    #[inline]
     pub const fn origin(&self) -> BlockPos {
         BlockPos::new(self.min_block_x(), self.min_block_y(), self.min_block_z())
     }
 
     /// Returns the chunk position for this section (discards the Y component).
+    #[inline]
     pub const fn chunk(&self) -> ChunkPos {
         ChunkPos::new(self.x, self.z)
     }
 
     /// Converts this section position to a [`Vec3i`].
+    #[inline]
     pub const fn as_vec3i(&self) -> Vec3i {
         Vec3i::new(self.x, self.y, self.z)
     }

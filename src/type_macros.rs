@@ -23,6 +23,7 @@ macro_rules! impl_vector_ops {
         impl std::ops::Neg for $type {
             type Output = $type;
 
+            #[inline]
             fn neg(self) -> $type {
                 self.negate()
             }
@@ -32,6 +33,7 @@ macro_rules! impl_vector_ops {
         impl std::ops::Add for $type {
             type Output = $type;
 
+            #[inline]
             fn add(self, rhs: $type) -> $type {
                 self.add_vec(rhs)
             }
@@ -40,18 +42,21 @@ macro_rules! impl_vector_ops {
         impl std::ops::Sub for $type {
             type Output = $type;
 
+            #[inline]
             fn sub(self, rhs: $type) -> $type {
                 self.subtract_vec(rhs)
             }
         }
 
         impl std::ops::AddAssign for $type {
+            #[inline]
             fn add_assign(&mut self, rhs: $type) {
                 *self = self.add_vec(rhs);
             }
         }
 
         impl std::ops::SubAssign for $type {
+            #[inline]
             fn sub_assign(&mut self, rhs: $type) {
                 *self = self.subtract_vec(rhs);
             }
@@ -67,31 +72,37 @@ macro_rules! impl_directional {
     ($type:ty) => {
         impl $type {
             /// Returns the position one block above (positive Y).
+            #[inline]
             pub const fn above(self) -> Self {
                 self.offset(0, 1, 0)
             }
 
             /// Returns the position one block below (negative Y).
+            #[inline]
             pub const fn below(self) -> Self {
                 self.offset(0, -1, 0)
             }
 
             /// Returns the position one block to the north (negative Z).
+            #[inline]
             pub const fn north(self) -> Self {
                 self.offset(0, 0, -1)
             }
 
             /// Returns the position one block to the south (positive Z).
+            #[inline]
             pub const fn south(self) -> Self {
                 self.offset(0, 0, 1)
             }
 
             /// Returns the position one block to the west (negative X).
+            #[inline]
             pub const fn west(self) -> Self {
                 self.offset(-1, 0, 0)
             }
 
             /// Returns the position one block to the east (positive X).
+            #[inline]
             pub const fn east(self) -> Self {
                 self.offset(1, 0, 0)
             }
@@ -107,6 +118,7 @@ macro_rules! impl_axis_accessor {
     ($type:ty, $scalar:ty) => {
         impl $type {
             /// Returns the component along the given axis.
+            #[inline]
             pub const fn get_axis(self, axis: Axis) -> $scalar {
                 match axis {
                     Axis::X => self.x,
@@ -116,6 +128,7 @@ macro_rules! impl_axis_accessor {
             }
 
             /// Returns a copy with the given axis component replaced.
+            #[inline]
             pub const fn with_axis(self, axis: Axis, value: $scalar) -> Self {
                 match axis {
                     Axis::X => Self { x: value, ..self },
@@ -149,11 +162,13 @@ macro_rules! impl_protocol_enum {
     ($enum_ty:ident { $($variant:ident = $id:literal => $name:literal),+ $(,)? }) => {
         impl $enum_ty {
             /// Returns the numeric ID of this variant.
+            #[inline]
             pub const fn id(self) -> i32 {
                 self as i32
             }
 
             /// Returns the lowercase name of this variant.
+            #[inline]
             pub const fn name(self) -> &'static str {
                 match self {
                     $( $enum_ty::$variant => $name, )+
@@ -161,6 +176,7 @@ macro_rules! impl_protocol_enum {
             }
 
             /// Looks up a variant by numeric ID.
+            #[inline]
             pub const fn by_id(id: i32) -> Option<$enum_ty> {
                 match id {
                     $( $id => Some($enum_ty::$variant), )+
@@ -169,6 +185,7 @@ macro_rules! impl_protocol_enum {
             }
 
             /// Looks up a variant by lowercase name.
+            #[inline]
             pub fn by_name(name: &str) -> Option<$enum_ty> {
                 match name {
                     $( $name => Some($enum_ty::$variant), )+

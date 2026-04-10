@@ -68,6 +68,7 @@ pub const HORIZONTALS: [Direction; 4] = [
 
 impl Direction {
     /// Returns the opposite direction.
+    #[inline]
     pub const fn opposite(self) -> Direction {
         match self {
             Direction::Down => Direction::Up,
@@ -83,6 +84,7 @@ impl Direction {
     ///
     /// Only valid for horizontal directions.
     /// Returns `None` for [`Direction::Up`] and [`Direction::Down`].
+    #[inline]
     pub const fn clockwise(self) -> Option<Direction> {
         match self {
             Direction::North => Some(Direction::East),
@@ -97,6 +99,7 @@ impl Direction {
     ///
     /// Only valid for horizontal directions.
     /// Returns `None` for [`Direction::Up`] and [`Direction::Down`].
+    #[inline]
     pub const fn counter_clockwise(self) -> Option<Direction> {
         match self {
             Direction::North => Some(Direction::West),
@@ -108,6 +111,7 @@ impl Direction {
     }
 
     /// X component of the direction's unit normal vector.
+    #[inline]
     pub fn step_x(self) -> i32 {
         match self {
             Direction::West => -1,
@@ -117,6 +121,7 @@ impl Direction {
     }
 
     /// Y component of the direction's unit normal vector.
+    #[inline]
     pub fn step_y(self) -> i32 {
         match self {
             Direction::Down => -1,
@@ -126,6 +131,7 @@ impl Direction {
     }
 
     /// Z component of the direction's unit normal vector.
+    #[inline]
     pub fn step_z(self) -> i32 {
         match self {
             Direction::North => -1,
@@ -135,6 +141,7 @@ impl Direction {
     }
 
     /// Returns the axis this direction lies on.
+    #[inline]
     pub fn axis(self) -> Axis {
         match self {
             Direction::Down | Direction::Up => Axis::Y,
@@ -144,6 +151,7 @@ impl Direction {
     }
 
     /// Returns the axis direction (positive or negative) for this direction.
+    #[inline]
     pub fn axis_direction(self) -> AxisDirection {
         match self {
             Direction::Down | Direction::North | Direction::West => AxisDirection::Negative,
@@ -154,6 +162,7 @@ impl Direction {
     /// Converts a 3D data value (0–5) to a [`Direction`].
     ///
     /// Returns `None` if `id` is out of range.
+    #[inline]
     pub fn from_3d_data_value(id: u8) -> Option<Direction> {
         match id {
             0 => Some(Direction::Down),
@@ -170,6 +179,7 @@ impl Direction {
     ///
     /// Mapping: 0=South, 1=West, 2=North, 3=East.
     /// Returns `None` if `id` is out of range.
+    #[inline]
     pub fn from_2d_data_value(id: u8) -> Option<Direction> {
         match id {
             0 => Some(Direction::South),
@@ -181,6 +191,7 @@ impl Direction {
     }
 
     /// Returns the 3D data value (0–5) for this direction.
+    #[inline]
     pub fn to_3d_data_value(self) -> u8 {
         self as u8
     }
@@ -189,6 +200,7 @@ impl Direction {
     ///
     /// South=0, West=90, North=180, East=270.
     /// Returns 0.0 for vertical directions.
+    #[inline]
     pub fn to_y_rot(self) -> f32 {
         match self {
             Direction::South => 0.0,
@@ -216,6 +228,7 @@ impl Direction {
     }
 
     /// Returns the lowercase name of this direction.
+    #[inline]
     pub fn name(self) -> &'static str {
         match self {
             Direction::Down => "down",
@@ -228,6 +241,7 @@ impl Direction {
     }
 
     /// Returns `true` if this is a horizontal direction (North/South/East/West).
+    #[inline]
     pub fn is_horizontal(self) -> bool {
         matches!(
             self,
@@ -236,6 +250,7 @@ impl Direction {
     }
 
     /// Returns `true` if this is a vertical direction (Up/Down).
+    #[inline]
     pub fn is_vertical(self) -> bool {
         matches!(self, Direction::Up | Direction::Down)
     }
@@ -292,6 +307,7 @@ pub enum Plane {
 
 impl Plane {
     /// Returns an iterator over the directions in this plane.
+    #[inline]
     pub fn directions(self) -> &'static [Direction] {
         match self {
             Plane::Horizontal => &HORIZONTALS,
@@ -300,6 +316,7 @@ impl Plane {
     }
 
     /// Tests if the given direction belongs to this plane.
+    #[inline]
     pub fn test(self, direction: Direction) -> bool {
         match self {
             Plane::Horizontal => direction.is_horizontal(),
@@ -329,16 +346,19 @@ pub enum Axis {
 
 impl Axis {
     /// Returns `true` if this is the Y axis.
+    #[inline]
     pub fn is_vertical(self) -> bool {
         self == Axis::Y
     }
 
     /// Returns `true` if this is the X or Z axis.
+    #[inline]
     pub fn is_horizontal(self) -> bool {
         matches!(self, Axis::X | Axis::Z)
     }
 
     /// Selects the component corresponding to this axis.
+    #[inline]
     pub fn choose<T>(self, x: T, y: T, z: T) -> T {
         match self {
             Axis::X => x,
@@ -348,6 +368,7 @@ impl Axis {
     }
 
     /// Returns the direction along the positive end of this axis.
+    #[inline]
     pub fn positive(self) -> Direction {
         match self {
             Axis::X => Direction::East,
@@ -357,6 +378,7 @@ impl Axis {
     }
 
     /// Returns the direction along the negative end of this axis.
+    #[inline]
     pub fn negative(self) -> Direction {
         match self {
             Axis::X => Direction::West,
@@ -366,6 +388,7 @@ impl Axis {
     }
 
     /// Returns the lowercase name of this axis.
+    #[inline]
     pub fn name(self) -> &'static str {
         match self {
             Axis::X => "x",
@@ -394,6 +417,7 @@ pub enum AxisDirection {
 
 impl AxisDirection {
     /// Returns the integer step for this direction (+1 or −1).
+    #[inline]
     pub fn step(self) -> i32 {
         match self {
             AxisDirection::Positive => 1,
@@ -402,6 +426,7 @@ impl AxisDirection {
     }
 
     /// Returns the opposite axis direction.
+    #[inline]
     pub fn opposite(self) -> AxisDirection {
         match self {
             AxisDirection::Positive => AxisDirection::Negative,
@@ -836,6 +861,63 @@ mod tests {
                 let dir = ALL[dir_idx as usize];
                 let sum = dir.step_x().abs() + dir.step_y().abs() + dir.step_z().abs();
                 prop_assert_eq!(sum, 1);
+            }
+
+            #[test]
+            fn direction_axis_agrees_with_step(dir_idx in 0u8..6) {
+                use crate::direction::Axis;
+                let dir = ALL[dir_idx as usize];
+                match dir.axis() {
+                    Axis::X => {
+                        prop_assert_ne!(dir.step_x(), 0);
+                        prop_assert_eq!(dir.step_y(), 0);
+                        prop_assert_eq!(dir.step_z(), 0);
+                    }
+                    Axis::Y => {
+                        prop_assert_eq!(dir.step_x(), 0);
+                        prop_assert_ne!(dir.step_y(), 0);
+                        prop_assert_eq!(dir.step_z(), 0);
+                    }
+                    Axis::Z => {
+                        prop_assert_eq!(dir.step_x(), 0);
+                        prop_assert_eq!(dir.step_y(), 0);
+                        prop_assert_ne!(dir.step_z(), 0);
+                    }
+                }
+            }
+
+            #[test]
+            fn direction_opposite_negates_step(dir_idx in 0u8..6) {
+                let dir = ALL[dir_idx as usize];
+                let opp = dir.opposite();
+                prop_assert_eq!(dir.step_x() + opp.step_x(), 0);
+                prop_assert_eq!(dir.step_y() + opp.step_y(), 0);
+                prop_assert_eq!(dir.step_z() + opp.step_z(), 0);
+            }
+
+            #[test]
+            fn direction_3d_data_value_roundtrip(dir_idx in 0u8..6) {
+                use crate::Direction;
+                let dir = ALL[dir_idx as usize];
+                let id = dir.to_3d_data_value();
+                let back = Direction::from_3d_data_value(id).unwrap();
+                prop_assert_eq!(dir, back);
+            }
+
+            #[test]
+            fn direction_from_y_rot_always_horizontal(rot in -720.0f64..720.0) {
+                use crate::Direction;
+                let dir = Direction::from_y_rot(rot);
+                prop_assert!(dir.is_horizontal());
+            }
+
+            #[test]
+            fn direction_clockwise_stays_horizontal(dir_idx in 0u8..6) {
+                let dir = ALL[dir_idx as usize];
+                if let Some(cw) = dir.clockwise() {
+                    prop_assert!(cw.is_horizontal());
+                    prop_assert!(dir.is_horizontal());
+                }
             }
         }
     }

@@ -69,32 +69,38 @@ impl Vec2 {
     };
 
     /// Creates a new `Vec2`.
+    #[inline]
     pub const fn new(x: f32, y: f32) -> Self {
         Self { x, y }
     }
 
     /// Returns a new vector scaled by `factor`.
+    #[inline]
     pub fn scale(self, factor: f32) -> Self {
         Self::new(self.x * factor, self.y * factor)
     }
 
     /// Returns the sum of this vector and `other`.
     #[allow(clippy::should_implement_trait)]
+    #[inline]
     pub fn add(self, other: Vec2) -> Self {
         Self::new(self.x + other.x, self.y + other.y)
     }
 
     /// Returns a new vector with `v` added to both components.
+    #[inline]
     pub fn add_scalar(self, v: f32) -> Self {
         Self::new(self.x + v, self.y + v)
     }
 
     /// Returns the dot product of this vector and `other`.
+    #[inline]
     pub fn dot(self, other: Vec2) -> f32 {
         self.x * other.x + self.y * other.y
     }
 
     /// Returns the negated vector.
+    #[inline]
     pub fn negated(self) -> Self {
         Self::new(-self.x, -self.y)
     }
@@ -102,6 +108,7 @@ impl Vec2 {
     /// Returns the normalized (unit-length) vector.
     ///
     /// Returns [`Vec2::ZERO`] if the length is less than `1e-4`.
+    #[inline]
     pub fn normalized(self) -> Self {
         let len = self.length();
         if len < 1e-4 {
@@ -111,16 +118,19 @@ impl Vec2 {
     }
 
     /// Returns the Euclidean length of this vector.
+    #[inline]
     pub fn length(self) -> f32 {
         self.length_sqr().sqrt()
     }
 
     /// Returns the squared Euclidean length of this vector.
+    #[inline]
     pub fn length_sqr(self) -> f32 {
         self.x * self.x + self.y * self.y
     }
 
     /// Returns the squared Euclidean distance to `other`.
+    #[inline]
     pub fn distance_to_sqr(self, other: Vec2) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;

@@ -59,6 +59,7 @@ impl Rotations {
     ///
     /// NaN and infinite values become `0.0`; all values are reduced mod 360
     /// (preserving sign).
+    #[inline]
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self {
             x: sanitize(x),

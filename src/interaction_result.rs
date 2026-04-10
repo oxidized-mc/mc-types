@@ -67,6 +67,17 @@ impl InteractionResult {
     }
 }
 
+impl std::fmt::Display for InteractionResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Success { swing_source } => write!(f, "success({swing_source})"),
+            Self::Fail => f.write_str("fail"),
+            Self::Pass => f.write_str("pass"),
+            Self::TryEmptyHandInteraction => f.write_str("try_empty_hand_interaction"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]
@@ -132,5 +143,51 @@ mod tests {
             InteractionResult::SUCCESS,
             InteractionResult::SUCCESS_SERVER
         );
+    }
+
+    // ── Display ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_interaction_result_display_success() {
+        assert_eq!(InteractionResult::SUCCESS.to_string(), "success(client)");
+    }
+
+    #[test]
+    fn test_interaction_result_display_success_server() {
+        assert_eq!(
+            InteractionResult::SUCCESS_SERVER.to_string(),
+            "success(server)"
+        );
+    }
+
+    #[test]
+    fn test_interaction_result_display_consume() {
+        assert_eq!(InteractionResult::CONSUME.to_string(), "success(none)");
+    }
+
+    #[test]
+    fn test_interaction_result_display_non_success() {
+        assert_eq!(InteractionResult::Fail.to_string(), "fail");
+        assert_eq!(InteractionResult::Pass.to_string(), "pass");
+        assert_eq!(
+            InteractionResult::TryEmptyHandInteraction.to_string(),
+            "try_empty_hand_interaction"
+        );
+    }
+
+    // ── Snapshots ───────────────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_interaction_result_display() {
+            insta::assert_snapshot!(InteractionResult::SUCCESS.to_string(), @"success(client)");
+            insta::assert_snapshot!(InteractionResult::SUCCESS_SERVER.to_string(), @"success(server)");
+            insta::assert_snapshot!(InteractionResult::CONSUME.to_string(), @"success(none)");
+            insta::assert_snapshot!(InteractionResult::Fail.to_string(), @"fail");
+            insta::assert_snapshot!(InteractionResult::Pass.to_string(), @"pass");
+            insta::assert_snapshot!(InteractionResult::TryEmptyHandInteraction.to_string(), @"try_empty_hand_interaction");
+        }
     }
 }

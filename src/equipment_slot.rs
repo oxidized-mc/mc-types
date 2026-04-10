@@ -70,6 +70,7 @@ pub enum EquipmentSlot {
 
 impl EquipmentSlot {
     /// The wire-format ID for this slot (non-sequential — matches vanilla).
+    #[inline]
     pub const fn id(self) -> i32 {
         match self {
             Self::MainHand => 0,
@@ -84,6 +85,7 @@ impl EquipmentSlot {
     }
 
     /// Looks up a slot by its wire ID.
+    #[inline]
     pub const fn by_id(id: i32) -> Option<Self> {
         match id {
             0 => Some(Self::MainHand),
@@ -99,6 +101,7 @@ impl EquipmentSlot {
     }
 
     /// The slot type category.
+    #[inline]
     pub const fn slot_type(self) -> EquipmentSlotType {
         match self {
             Self::MainHand | Self::OffHand => EquipmentSlotType::Hand,
@@ -112,6 +115,7 @@ impl EquipmentSlot {
     ///
     /// Hands: MainHand=0, OffHand=1. Armor: Feet=0, Legs=1, Chest=2, Head=3.
     /// Body=0. Saddle=0.
+    #[inline]
     pub const fn index(self) -> usize {
         match self {
             Self::MainHand => 0,
@@ -126,11 +130,13 @@ impl EquipmentSlot {
     }
 
     /// Whether this is a hand slot (MainHand or OffHand).
+    #[inline]
     pub const fn is_hand(self) -> bool {
         matches!(self, Self::MainHand | Self::OffHand)
     }
 
     /// Whether this is an armor slot (humanoid or animal).
+    #[inline]
     pub const fn is_armor(self) -> bool {
         matches!(
             self,
@@ -141,11 +147,13 @@ impl EquipmentSlot {
     /// Whether experience can be applied to items in this slot.
     ///
     /// In vanilla, this is true for all slots except saddle.
+    #[inline]
     pub const fn can_increase_experience(self) -> bool {
         !matches!(self, Self::Saddle)
     }
 
     /// The lowercase name of this slot.
+    #[inline]
     pub const fn name(self) -> &'static str {
         match self {
             Self::MainHand => "mainhand",

@@ -81,11 +81,13 @@ impl BlockPos {
     pub const ZERO: BlockPos = BlockPos { x: 0, y: 0, z: 0 };
 
     /// Creates a new [`BlockPos`].
+    #[inline]
     pub const fn new(x: i32, y: i32, z: i32) -> Self {
         Self { x, y, z }
     }
 
     /// Creates a [`BlockPos`] from a [`Vec3i`].
+    #[inline]
     pub const fn from_vec3i(v: &Vec3i) -> Self {
         Self {
             x: v.x,
@@ -105,6 +107,7 @@ impl BlockPos {
     /// let packed = pos.as_long();
     /// assert_eq!(BlockPos::from_long(packed), pos);
     /// ```
+    #[inline]
     pub const fn as_long(&self) -> i64 {
         ((self.x as i64 & PACKED_X_MASK) << X_OFFSET)
             | ((self.z as i64 & PACKED_Z_MASK) << Z_OFFSET)
@@ -114,6 +117,7 @@ impl BlockPos {
     /// Unpacks a block position from a 64-bit integer.
     ///
     /// Sign extension is applied to recover negative coordinates.
+    #[inline]
     pub const fn from_long(packed: i64) -> Self {
         // Arithmetic right shift on i64 sign-extends.
         let x = (packed >> X_OFFSET) as i32;
@@ -134,6 +138,7 @@ impl BlockPos {
     /// let pos = BlockPos::containing(10.7, -0.3, 5.0);
     /// assert_eq!(pos, BlockPos::new(10, -1, 5));
     /// ```
+    #[inline]
     pub fn containing(x: f64, y: f64, z: f64) -> Self {
         Self::new(x.floor() as i32, y.floor() as i32, z.floor() as i32)
     }
@@ -152,6 +157,7 @@ impl BlockPos {
     /// let pos = BlockPos::new(10, 64, -30);
     /// assert_eq!(pos.offset(1, 0, -1), BlockPos::new(11, 64, -31));
     /// ```
+    #[inline]
     pub const fn offset(self, dx: i32, dy: i32, dz: i32) -> Self {
         Self::new(
             self.x.wrapping_add(dx),
@@ -161,21 +167,25 @@ impl BlockPos {
     }
 
     /// Returns the position `n` blocks above (positive Y).
+    #[inline]
     pub const fn above_n(self, n: i32) -> Self {
         self.offset(0, n, 0)
     }
 
     /// Returns the position `n` blocks below (negative Y).
+    #[inline]
     pub const fn below_n(self, n: i32) -> Self {
         self.offset(0, -n, 0)
     }
 
     /// Returns the position offset by one step in the given [`Direction`].
+    #[inline]
     pub fn relative(self, dir: Direction) -> Self {
         self.offset(dir.step_x(), dir.step_y(), dir.step_z())
     }
 
     /// Returns the position offset by `n` steps in the given [`Direction`].
+    #[inline]
     pub fn relative_steps(self, dir: Direction, n: i32) -> Self {
         self.offset(
             dir.step_x().wrapping_mul(n),
@@ -185,6 +195,7 @@ impl BlockPos {
     }
 
     /// Converts this position to a [`Vec3i`].
+    #[inline]
     pub const fn as_vec3i(&self) -> Vec3i {
         Vec3i::new(self.x, self.y, self.z)
     }
@@ -192,6 +203,7 @@ impl BlockPos {
     /// Returns the squared Euclidean distance to `other`.
     ///
     /// Uses `i64` arithmetic to avoid overflow for large coordinates.
+    #[inline]
     pub fn dist_sqr(&self, other: &BlockPos) -> i64 {
         let dx = i64::from(self.x) - i64::from(other.x);
         let dy = i64::from(self.y) - i64::from(other.y);
@@ -202,6 +214,7 @@ impl BlockPos {
     /// Returns the Manhattan (L1) distance to `other`.
     ///
     /// Uses `i64` arithmetic internally to avoid overflow with extreme coordinates.
+    #[inline]
     pub fn dist_manhattan(&self, other: &BlockPos) -> i64 {
         let dx = (i64::from(self.x) - i64::from(other.x)).abs();
         let dy = (i64::from(self.y) - i64::from(other.y)).abs();
@@ -219,6 +232,7 @@ impl BlockPos {
     /// let center = BlockPos::new(10, 64, -30).get_center();
     /// assert_eq!(center, Vec3::new(10.5, 64.5, -29.5));
     /// ```
+    #[inline]
     pub fn get_center(&self) -> Vec3 {
         Vec3::new(
             f64::from(self.x) + 0.5,

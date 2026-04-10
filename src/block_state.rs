@@ -36,11 +36,13 @@ impl BlockState {
     pub const AIR: BlockState = BlockState(0);
 
     /// Creates a new `BlockState` from a raw palette ID.
+    #[inline]
     pub const fn new(id: u16) -> Self {
         Self(id)
     }
 
     /// Returns the raw palette ID.
+    #[inline]
     pub const fn id(self) -> u16 {
         self.0
     }

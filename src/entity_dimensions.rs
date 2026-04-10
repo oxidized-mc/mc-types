@@ -39,6 +39,7 @@ pub struct EntityDimensions {
 
 impl EntityDimensions {
     /// Creates new scalable entity dimensions with a default eye height.
+    #[inline]
     pub fn new(width: f32, height: f32) -> Self {
         Self {
             width,
@@ -49,11 +50,13 @@ impl EntityDimensions {
     }
 
     /// Creates scalable entity dimensions with a default eye height.
+    #[inline]
     pub fn scalable(width: f32, height: f32) -> Self {
         Self::new(width, height)
     }
 
     /// Creates fixed entity dimensions that ignore scaling.
+    #[inline]
     pub fn fixed(width: f32, height: f32) -> Self {
         Self {
             width,
@@ -64,6 +67,7 @@ impl EntityDimensions {
     }
 
     /// Returns a copy with the given eye height.
+    #[inline]
     pub fn with_eye_height(self, eye_height: f32) -> Self {
         Self { eye_height, ..self }
     }
@@ -72,6 +76,7 @@ impl EntityDimensions {
     ///
     /// The box extends `width/2` in X and Z from the position, and `height`
     /// upward from the Y position.
+    #[inline]
     pub fn make_bounding_box(&self, pos: Vec3) -> Aabb {
         let half_w = f64::from(self.width) / 2.0;
         let h = f64::from(self.height);
@@ -86,6 +91,7 @@ impl EntityDimensions {
     }
 
     /// Scales both dimensions by a factor. Fixed dimensions are unaffected.
+    #[inline]
     pub fn scale(self, factor: f32) -> Self {
         if self.fixed {
             return self;
