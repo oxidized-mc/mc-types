@@ -58,10 +58,14 @@ impl Vec2 {
         y: f32::MAX,
     };
 
-    /// Minimum representable vector.
+    /// Smallest positive vector, matching Java's `Float.MIN_VALUE` semantics.
+    ///
+    /// Java's `Float.MIN_VALUE` is the smallest positive subnormal float
+    /// (≈1.4e-45), **not** the most negative float. This is used as a
+    /// "smallest magnitude" sentinel in vanilla.
     pub const MIN: Vec2 = Vec2 {
-        x: f32::MIN,
-        y: f32::MIN,
+        x: 1.4e-45,
+        y: 1.4e-45,
     };
 
     /// Creates a new `Vec2`.
@@ -172,7 +176,8 @@ mod tests {
         assert_eq!(Vec2::UNIT_Y, Vec2::new(0.0, 1.0));
         assert_eq!(Vec2::NEG_UNIT_Y, Vec2::new(0.0, -1.0));
         assert_eq!(Vec2::MAX, Vec2::new(f32::MAX, f32::MAX));
-        assert_eq!(Vec2::MIN, Vec2::new(f32::MIN, f32::MIN));
+        // Vec2::MIN matches Java's Float.MIN_VALUE (smallest positive subnormal)
+        assert_eq!(Vec2::MIN, Vec2::new(1.4e-45, 1.4e-45));
     }
 
     // ── Scale ───────────────────────────────────────────────────────
