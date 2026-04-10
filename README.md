@@ -15,7 +15,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidized-mc-types = "0.2.0"
+oxidized-mc-types = "x.x.x" # Check crates.io for the latest version
 ```
 
 ```rust
