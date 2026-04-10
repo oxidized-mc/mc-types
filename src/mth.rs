@@ -7,27 +7,46 @@
 ///
 /// Subtracts 1 from the cast result when the value has a fractional part and
 /// is negative, because Rust/C truncation rounds toward zero rather than
-/// toward negative infinity.
+/// toward negative infinity. Non-finite inputs (NaN, ±infinity) return the
+/// saturating cast to avoid overflow panics.
 pub fn floor(value: f64) -> i32 {
     let i = value as i32;
+    if !value.is_finite() {
+        return i;
+    }
     if value < i as f64 { i - 1 } else { i }
 }
 
 /// Ceils a `f64` to `i32`, matching Java `Mth.ceil(double)`.
+///
+/// Non-finite inputs return the saturating cast.
 pub fn ceil(value: f64) -> i32 {
     let i = value as i32;
+    if !value.is_finite() {
+        return i;
+    }
     if value > i as f64 { i + 1 } else { i }
 }
 
 /// Floors a `f32` to `i32`, matching Java `Mth.floor(float)`.
+///
+/// Non-finite inputs return the saturating cast.
 pub fn floor_f(value: f32) -> i32 {
     let i = value as i32;
+    if !value.is_finite() {
+        return i;
+    }
     if value < i as f32 { i - 1 } else { i }
 }
 
 /// Ceils a `f32` to `i32`, matching Java `Mth.ceil(float)`.
+///
+/// Non-finite inputs return the saturating cast.
 pub fn ceil_f(value: f32) -> i32 {
     let i = value as i32;
+    if !value.is_finite() {
+        return i;
+    }
     if value > i as f32 { i + 1 } else { i }
 }
 
@@ -172,6 +191,37 @@ mod tests {
     #[test]
     fn test_ceil_f_negative_fraction() {
         assert_eq!(ceil_f(-3.7), -3);
+    }
+
+    // Non-finite inputs must not panic (saturating cast to i32 bounds)
+    #[test]
+    fn test_floor_negative_infinity_no_panic() {
+        let _ = floor(f64::NEG_INFINITY);
+    }
+
+    #[test]
+    fn test_ceil_positive_infinity_no_panic() {
+        let _ = ceil(f64::INFINITY);
+    }
+
+    #[test]
+    fn test_floor_nan() {
+        assert_eq!(floor(f64::NAN), 0);
+    }
+
+    #[test]
+    fn test_ceil_nan() {
+        assert_eq!(ceil(f64::NAN), 0);
+    }
+
+    #[test]
+    fn test_floor_f_negative_infinity_no_panic() {
+        let _ = floor_f(f32::NEG_INFINITY);
+    }
+
+    #[test]
+    fn test_ceil_f_positive_infinity_no_panic() {
+        let _ = ceil_f(f32::INFINITY);
     }
 
     // ── clamp ───────────────────────────────────────────────────────────
