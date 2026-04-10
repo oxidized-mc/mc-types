@@ -150,6 +150,16 @@ mod tests {
         assert!(GameType::Spectator.is_block_placing_restricted());
     }
 
+    // ── Translation keys ──────────────────────────────────────────
+
+    #[test]
+    fn test_game_type_translation_key() {
+        assert_eq!(GameType::Survival.translation_key(), "gameMode.survival");
+        assert_eq!(GameType::Creative.translation_key(), "gameMode.creative");
+        assert_eq!(GameType::Adventure.translation_key(), "gameMode.adventure");
+        assert_eq!(GameType::Spectator.translation_key(), "gameMode.spectator");
+    }
+
     // ── Display ─────────────────────────────────────────────────────
 
     #[test]

@@ -325,7 +325,6 @@ mod tests {
             }
 
             #[test]
-            #[test]
             fn vec2_negate_double_is_identity(
                 x in -1000.0f32..1000.0,
                 y in -1000.0f32..1000.0,

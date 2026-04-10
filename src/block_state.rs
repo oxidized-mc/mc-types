@@ -49,10 +49,12 @@ impl BlockState {
     ///
     /// # Errors
     ///
-    /// Returns [`TypeError`] if the buffer is truncated.
+    /// Returns [`TypeError`] if the buffer is truncated or the VarInt value
+    /// is outside the valid `u16` range (`0..=65535`).
     pub fn read(buf: &mut Bytes) -> Result<Self, TypeError> {
         let id = varint::read_varint_buf(buf)?;
-        Ok(Self(id as u16))
+        let id = u16::try_from(id).map_err(|_| TypeError::UnexpectedEof { need: 1, have: 0 })?;
+        Ok(Self(id))
     }
 
     /// Writes this `BlockState` to a wire buffer as a VarInt.

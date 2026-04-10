@@ -8,9 +8,9 @@
 use bytes::BytesMut;
 
 use oxidized_mc_types::{
-    BlockPos, BlockState, ChatVisibility, Difficulty, EquipmentSlot, GameType, HumanoidArm,
-    InteractionHand, ParticleStatus, Pose, ResourceLocation, Rotations, SectionPos, Vec2, Vec3,
-    Vec3i,
+    BlockPos, BlockState, ChatVisibility, Difficulty, EntitySpawnReason, EquipmentSlot, GameType,
+    HumanoidArm, InteractionHand, MobCategory, ParticleStatus, Pose, ResourceLocation, Rotations,
+    SectionPos, SoundSource, Vec2, Vec3, Vec3i,
 };
 
 /// Helper: encode a value, decode it, and assert equality.
@@ -161,6 +161,32 @@ fn wire_roundtrip_equipment_slot_all_variants() {
 fn wire_roundtrip_rotations() {
     assert_wire_roundtrip!(Rotations, Rotations::new(10.0, 20.0, 30.0));
     assert_wire_roundtrip!(Rotations, Rotations::ZERO);
+}
+
+// ── Phase 07 enums ────────────────────────────────────────────────
+
+#[test]
+fn wire_roundtrip_mob_category_all_variants() {
+    for id in 0..=7 {
+        let mc = MobCategory::by_id(id).unwrap();
+        assert_wire_roundtrip!(MobCategory, mc);
+    }
+}
+
+#[test]
+fn wire_roundtrip_sound_source_all_variants() {
+    for id in 0..=10 {
+        let ss = SoundSource::by_id(id).unwrap();
+        assert_wire_roundtrip!(SoundSource, ss);
+    }
+}
+
+#[test]
+fn wire_roundtrip_entity_spawn_reason_all_variants() {
+    for id in 0..=18 {
+        let esr = EntitySpawnReason::by_id(id).unwrap();
+        assert_wire_roundtrip!(EntitySpawnReason, esr);
+    }
 }
 
 // ── Multi-value buffer ─────────────────────────────────────────────

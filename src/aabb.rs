@@ -336,14 +336,16 @@ impl Aabb {
 
     /// Returns `true` if the point `(x, y, z)` is inside this bounding box.
     ///
-    /// Points on the boundary are considered inside.
+    /// The min boundary is inclusive and the max boundary is exclusive,
+    /// matching vanilla's half-open interval semantics. This ensures every
+    /// point belongs to at most one AABB when boxes are adjacent.
     pub fn contains(&self, x: f64, y: f64, z: f64) -> bool {
         x >= self.min_x
-            && x <= self.max_x
+            && x < self.max_x
             && y >= self.min_y
-            && y <= self.max_y
+            && y < self.max_y
             && z >= self.min_z
-            && z <= self.max_z
+            && z < self.max_z
     }
 
     /// Returns `true` if the given [`Vec3`] is inside this bounding box.
@@ -352,15 +354,18 @@ impl Aabb {
     }
 
     /// Returns the intersection (overlap region) of this bounding box and `other`.
+    ///
+    /// If the boxes do not overlap, the result is auto-corrected to a valid
+    /// AABB (min ≤ max on each axis) by [`Aabb::new`].
     pub fn intersect(&self, other: &Aabb) -> Self {
-        Self {
-            min_x: self.min_x.max(other.min_x),
-            min_y: self.min_y.max(other.min_y),
-            min_z: self.min_z.max(other.min_z),
-            max_x: self.max_x.min(other.max_x),
-            max_y: self.max_y.min(other.max_y),
-            max_z: self.max_z.min(other.max_z),
-        }
+        Self::new(
+            self.min_x.max(other.min_x),
+            self.min_y.max(other.min_y),
+            self.min_z.max(other.min_z),
+            self.max_x.min(other.max_x),
+            self.max_y.min(other.max_y),
+            self.max_z.min(other.max_z),
+        )
     }
 
     /// Returns the smallest bounding box that contains both `self` and `other`.
@@ -717,10 +722,21 @@ mod tests {
     }
 
     #[test]
-    fn test_aabb_contains_on_edge() {
+    fn test_aabb_contains_on_min_boundary() {
         let bb = Aabb::new(0.0, 0.0, 0.0, 2.0, 2.0, 2.0);
         assert!(bb.contains(0.0, 0.0, 0.0));
-        assert!(bb.contains(2.0, 2.0, 2.0));
+    }
+
+    #[test]
+    fn test_aabb_contains_max_boundary_exclusive() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 2.0, 2.0, 2.0);
+        // Max boundary is exclusive (half-open interval)
+        assert!(!bb.contains(2.0, 2.0, 2.0));
+        assert!(!bb.contains(2.0, 1.0, 1.0));
+        assert!(!bb.contains(1.0, 2.0, 1.0));
+        assert!(!bb.contains(1.0, 1.0, 2.0));
+        // Just inside is still contained
+        assert!(bb.contains(1.999_999_999, 1.999_999_999, 1.999_999_999));
     }
 
     #[test]

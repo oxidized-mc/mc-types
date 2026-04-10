@@ -63,6 +63,10 @@ pub fn lerp(delta: f64, start: f64, end: f64) -> f64 {
 /// Returns a non-negative modulo result, matching Java `Mth.positiveModulo(int, int)`.
 ///
 /// The result is always in `[0, y)` for positive `y`.
+///
+/// # Panics
+///
+/// Panics if `y` is zero (division by zero).
 pub fn positive_modulo(x: i32, y: i32) -> i32 {
     let r = x % y;
     if r < 0 { r + y } else { r }

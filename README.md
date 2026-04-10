@@ -15,7 +15,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidized-mc-types = "0.1.0"
+oxidized-mc-types = "0.2.0"
 ```
 
 ```rust
@@ -23,12 +23,12 @@ use oxidized_mc_types::{BlockPos, SectionPos, Vec3, Direction, ResourceLocation}
 
 // Block positions with type-safe coordinate conversions
 let block = BlockPos::new(100, 64, -200);
-let section = SectionPos::from_block_pos(&block);
+let section = SectionPos::of_block_pos(&block);
 let chunk = block.chunk_pos();
 
 // Entity positions with floating-point precision
 let pos = Vec3::new(100.5, 64.0, -200.5);
-let moved = pos.add_vec(&Vec3::new(0.0, 1.0, 0.0));
+let moved = pos.add_vec(Vec3::new(0.0, 1.0, 0.0));
 
 // Namespaced identifiers
 let loc = ResourceLocation::new("minecraft", "stone").unwrap();
@@ -47,7 +47,7 @@ let opposite = facing.opposite();
 |------|-------------|------------|
 | `BlockPos` | Block position in world space | `x, y, z: i32` |
 | `SectionPos` | Chunk section position | `x, y, z: i32` |
-| `GlobalPos` | Block position + dimension key | `BlockPos` + `ResourceKey` |
+| `GlobalPos` | Block position + dimension key | `BlockPos` + `ResourceLocation` |
 | `ChunkPosExt` | Extension trait for `ChunkPos` | `x, z: i32` |
 | `Vec3` | Entity position / velocity | `x, y, z: f64` |
 | `Vec3i` | Integer 3D vector | `x, y, z: i32` |
@@ -74,6 +74,9 @@ let opposite = facing.opposite();
 | `ParticleStatus` | All / Decreased / Minimal | VarInt (0–2) |
 | `EquipmentSlot` | Main hand, off hand, armor slots, body | VarInt (0–7) |
 | `InteractionHand` | Main hand / Off hand | VarInt (0–1) |
+| `MobCategory` | Monster / Creature / Ambient / etc. | VarInt (0–7) |
+| `SoundSource` | Master / Music / Record / etc. | VarInt (0–10) |
+| `EntitySpawnReason` | Natural / Spawner / Command / etc. | VarInt (0–18) |
 
 ### Identifiers
 
