@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.3.0](https://github.com/oxidized-mc/mc-types/compare/v0.2.0...v0.3.0) (2026-04-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mc-types:** EntityDimensions::new() is no longer const fn (computes eye_height). Use EntityDimensions::fixed() for compile-time construction.
+
+### 🚀 Features
+
+* add MobCategory, SoundSource, and EntitySpawnReason ([2db2e9c](https://github.com/oxidized-mc/mc-types/commit/2db2e9ccc2a30fa773cc7659a0ec5a0bad68367b))
+* **mc-types:** add repository best practices (phase 06) ([5a1283b](https://github.com/oxidized-mc/mc-types/commit/5a1283b1106486e1cfb2e9f876d9ce14b1983af5))
+
+
+### 🐛 Bug Fixes
+
+* **ci:** chain publish into release-please workflow ([2920399](https://github.com/oxidized-mc/mc-types/commit/2920399ff11a2506779ef22e4865fb49aa4243da))
+* **mc-types:** address final audit findings ([bb0a9cf](https://github.com/oxidized-mc/mc-types/commit/bb0a9cfc8e9781f5fce97b400e55149f4a5e3601))
+* **mc-types:** correct Vec2::MIN to match Java Float.MIN_VALUE ([bfbff73](https://github.com/oxidized-mc/mc-types/commit/bfbff734d01904fb93808e7765d302806fd5f6eb))
+* **mc-types:** phase 08 final audit — correctness fixes and test additions ([0adc8d6](https://github.com/oxidized-mc/mc-types/commit/0adc8d6713ad606f4135cd90dd09a7c73d72570c))
+* **mc-types:** prevent panic in mth::floor/ceil on infinity inputs ([eb8cee5](https://github.com/oxidized-mc/mc-types/commit/eb8cee5d5a1b7533d4cb9f8fe76490efb3ab6673))
+* **mc-types:** resolve all open tech debt (TD-007, TD-017–TD-020) ([0626ad1](https://github.com/oxidized-mc/mc-types/commit/0626ad12bcee40b64634a2084ff1c746566df3f8))
+* **mc-types:** use truncating modulo in Rotations to match vanilla ([7108d63](https://github.com/oxidized-mc/mc-types/commit/7108d63b6ab7b09f4997caa685f7b72ea3db9fb5))
+* **mc-types:** use vanilla ordinal order for HORIZONTALS array ([ba989a3](https://github.com/oxidized-mc/mc-types/commit/ba989a3e90aa391819e0422959241463abea3606))
+* **mc-types:** use vanilla Vec3 normalize threshold 1e-4 ([6d6303a](https://github.com/oxidized-mc/mc-types/commit/6d6303abf3890ce79f07001567c1908fd1f10e78))
+* **mc-types:** validate Direction VarInt range before u8 cast ([725fc2e](https://github.com/oxidized-mc/mc-types/commit/725fc2e2cca86afd0702ca41ab2de125a7752387))
+* **release:** switch to rust release-type and bump version to 0.2.0 ([4dd15e6](https://github.com/oxidized-mc/mc-types/commit/4dd15e6803cb0cba1031b66413a55bb74d552ab8))
+
+
+### 🔨 Refactor
+
+* move [patch.crates-io] to meta-repo .cargo/config.toml ([7d05129](https://github.com/oxidized-mc/mc-types/commit/7d05129e312e8ceab72b341412b6023aaa4c12d7))
+
 ## [0.2.0](https://github.com/oxidized-mc/mc-types/compare/v0.1.0...v0.2.0) (2026-04-10)
 
 
