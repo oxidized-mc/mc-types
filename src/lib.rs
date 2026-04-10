@@ -1,5 +1,60 @@
-//! Minecraft game types — BlockPos, SectionPos, Vec3, Aabb, Direction,
-//! ResourceLocation, GameType, and more.
+//! # oxidized-mc-types
+//!
+//! Foundational Minecraft game types for the Oxidized MC ecosystem.
+//!
+//! This crate provides type-safe coordinate systems, geometry primitives,
+//! game enums, and resource identifiers used throughout the Minecraft
+//! protocol and game logic.
+//!
+//! ## Coordinate Types
+//!
+//! | Type | Description | Dimensionality |
+//! |------|-------------|----------------|
+//! | [`BlockPos`] | Block position in world space | 3D (i32) |
+//! | [`ChunkPosExt`] | Chunk column position (extension trait) | 2D (i32) |
+//! | [`SectionPos`] | Chunk section position | 3D (i32) |
+//! | [`GlobalPos`] | Block position + dimension identifier | 3D (i32) + key |
+//! | [`Vec3`] | Entity position / velocity | 3D (f64) |
+//! | [`Vec3i`] | Integer 3D vector | 3D (i32) |
+//! | [`Vec2`] | 2D float vector | 2D (f32) |
+//!
+//! All coordinate types are distinct newtypes preventing accidental
+//! mixing of block, chunk, and section coordinates at compile time.
+//!
+//! ## Geometry
+//!
+//! [`Aabb`] provides axis-aligned bounding boxes for collision detection
+//! and spatial queries, including ray intersection via
+//! [`Aabb::clip`](aabb::Aabb::clip).
+//!
+//! ## Game Enums
+//!
+//! Protocol-compatible enums with wire format support:
+//! [`GameType`], [`Difficulty`], [`Direction`], [`ChatVisibility`],
+//! [`HumanoidArm`], [`ParticleStatus`], [`Pose`], [`EquipmentSlot`],
+//! [`InteractionHand`].
+//!
+//! ## Identifiers
+//!
+//! [`ResourceLocation`] — namespaced identifiers (`minecraft:stone`)
+//! used throughout the Minecraft data model.
+//!
+//! [`ResourceKey<T>`](ResourceKey) — typed registry key binding a
+//! [`ResourceLocation`] to a specific registry.
+//!
+//! ## Interaction & Hit Results
+//!
+//! [`InteractionResult`] and [`BlockHitResult`] model server-side
+//! interaction outcomes and raycasting results.
+//!
+//! ## Math Utilities
+//!
+//! The [`mth`] module provides floor/ceil/clamp/lerp functions matching
+//! vanilla's `Mth` class, preserving Java edge-case behaviour.
+//!
+//! ## Feature Flags
+//!
+//! This crate has no optional features — all types are always available.
 
 #![warn(missing_docs)]
 #![deny(unsafe_code)]

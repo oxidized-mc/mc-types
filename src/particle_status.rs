@@ -1,7 +1,7 @@
 //! [`ParticleStatus`] — controls the particle rendering level on the client.
 //!
 //! Maps to the vanilla `ParticleStatus` enum.
-//! Used in [`ServerboundClientInformationPacket`](crate::packets::configuration::ServerboundClientInformationPacket) during configuration.
+//! Sent by the client during configuration to indicate particle preferences.
 
 /// Controls the particle rendering level on the client.
 ///

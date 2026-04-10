@@ -1,7 +1,7 @@
 //! [`ChatVisibility`] — controls which chat messages the client wants to see.
 //!
 //! Maps to the vanilla `ChatVisiblity` enum (note: vanilla misspells it).
-//! Used in [`ServerboundClientInformationPacket`](crate::packets::configuration::ServerboundClientInformationPacket) during configuration.
+//! Sent by the client during configuration to indicate chat preferences.
 
 /// Controls which chat messages the client wants to receive.
 ///
