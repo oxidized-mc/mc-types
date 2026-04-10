@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest a new feature, phase implementation, or improvement
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Check the roadmap
+        first — your feature may already be planned.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Related roadmap phase (if any)
+      options:
+        - "Phase 01 — Core Types"
+        - "Phase 02 — API Completeness"
+        - "Phase 03 — Testing & Compliance"
+        - "Phase 04 — Performance"
+        - "Phase 05 — Documentation"
+        - "Phase 06 — Repository Best Practices"
+        - "Phase 07 — Final Audit"
+        - "Phase R1 — Consumer Refactoring"
+        - "Not in roadmap"
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference (Java source / wiki.vg / RFC)
+      description: Link to relevant vanilla Java class or protocol documentation.
