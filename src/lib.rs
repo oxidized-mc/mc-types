@@ -32,7 +32,8 @@
 //! Protocol-compatible enums with wire format support:
 //! [`GameType`], [`Difficulty`], [`Direction`], [`ChatVisibility`],
 //! [`HumanoidArm`], [`ParticleStatus`], [`Pose`], [`EquipmentSlot`],
-//! [`InteractionHand`].
+//! [`InteractionHand`], [`MobCategory`], [`SoundSource`],
+//! [`EntitySpawnReason`].
 //!
 //! ## Identifiers
 //!
@@ -70,6 +71,7 @@ pub mod chunk_pos;
 pub mod difficulty;
 pub mod direction;
 pub mod entity_dimensions;
+pub mod entity_spawn_reason;
 pub mod equipment_slot;
 pub mod error;
 pub mod game_type;
@@ -78,6 +80,7 @@ pub mod hit_result;
 pub mod humanoid_arm;
 pub mod interaction_hand;
 pub mod interaction_result;
+pub mod mob_category;
 pub mod mth;
 pub mod particle_status;
 pub mod pose;
@@ -85,6 +88,7 @@ pub mod resource_key;
 pub mod resource_location;
 pub mod rotations;
 pub mod section_pos;
+pub mod sound_source;
 pub mod vec2;
 pub mod vec3;
 pub mod vec3i;
@@ -97,6 +101,7 @@ pub use chunk_pos::ChunkPosExt;
 pub use difficulty::Difficulty;
 pub use direction::{Axis, AxisDirection, Direction, Plane};
 pub use entity_dimensions::EntityDimensions;
+pub use entity_spawn_reason::EntitySpawnReason;
 pub use equipment_slot::{EquipmentSlot, EquipmentSlotType};
 pub use error::McTypesError;
 pub use game_type::GameType;
@@ -105,12 +110,14 @@ pub use hit_result::{BlockHitResult, HitResultType};
 pub use humanoid_arm::HumanoidArm;
 pub use interaction_hand::InteractionHand;
 pub use interaction_result::{InteractionResult, SwingSource};
+pub use mob_category::MobCategory;
 pub use particle_status::ParticleStatus;
 pub use pose::Pose;
 pub use resource_key::ResourceKey;
 pub use resource_location::ResourceLocation;
 pub use rotations::Rotations;
 pub use section_pos::SectionPos;
+pub use sound_source::SoundSource;
 pub use vec2::Vec2;
 pub use vec3::Vec3;
 pub use vec3i::Vec3i;
