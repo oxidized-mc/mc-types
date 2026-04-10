@@ -68,7 +68,7 @@ pub const HORIZONTALS: [Direction; 4] = [
 
 impl Direction {
     /// Returns the opposite direction.
-    pub fn opposite(self) -> Direction {
+    pub const fn opposite(self) -> Direction {
         match self {
             Direction::Down => Direction::Up,
             Direction::Up => Direction::Down,
@@ -83,7 +83,7 @@ impl Direction {
     ///
     /// Only valid for horizontal directions.
     /// Returns `None` for [`Direction::Up`] and [`Direction::Down`].
-    pub fn clockwise(self) -> Option<Direction> {
+    pub const fn clockwise(self) -> Option<Direction> {
         match self {
             Direction::North => Some(Direction::East),
             Direction::East => Some(Direction::South),
@@ -97,7 +97,7 @@ impl Direction {
     ///
     /// Only valid for horizontal directions.
     /// Returns `None` for [`Direction::Up`] and [`Direction::Down`].
-    pub fn counter_clockwise(self) -> Option<Direction> {
+    pub const fn counter_clockwise(self) -> Option<Direction> {
         match self {
             Direction::North => Some(Direction::West),
             Direction::West => Some(Direction::South),
@@ -248,8 +248,10 @@ impl Direction {
     /// out of range.
     pub fn read(buf: &mut Bytes) -> Result<Self, TypeError> {
         let id = varint::read_varint_buf(buf)?;
-        let id = u8::try_from(id).map_err(|_| TypeError::UnexpectedEof { need: 1, have: 0 })?;
-        Direction::from_3d_data_value(id).ok_or(TypeError::UnexpectedEof { need: 1, have: 0 })
+        let id = u8::try_from(id).map_err(|_| TypeError::InvalidValue { value: id })?;
+        Direction::from_3d_data_value(id).ok_or(TypeError::InvalidValue {
+            value: i32::from(id),
+        })
     }
 
     /// Writes this [`Direction`] to a wire buffer as a VarInt.

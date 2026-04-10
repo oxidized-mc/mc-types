@@ -163,7 +163,7 @@ impl MobCategory {
     /// Returns [`TypeError`] if the buffer is truncated or the ID is unknown.
     pub fn read(buf: &mut Bytes) -> Result<Self, TypeError> {
         let id = varint::read_varint_buf(buf)?;
-        Self::by_id(id).ok_or(TypeError::UnexpectedEof { need: 1, have: 0 })
+        Self::by_id(id).ok_or(TypeError::InvalidValue { value: id })
     }
 
     /// Writes this `MobCategory` to a wire buffer as a VarInt.

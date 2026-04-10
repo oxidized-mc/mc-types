@@ -2,7 +2,8 @@
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use oxidized_mc_types::{
-    Aabb, Axis, BlockPos, Direction, ResourceLocation, SectionPos, Vec3, Vec3i,
+    Aabb, Axis, BlockPos, Direction, EntitySpawnReason, MobCategory, ResourceLocation, SectionPos,
+    SoundSource, Vec3, Vec3i,
 };
 
 // ---------------------------------------------------------------------------
@@ -286,7 +287,72 @@ fn bench_vec3i(c: &mut Criterion) {
     });
 
     g.bench_function("get_axis", |bench| {
-        bench.iter(|| black_box(a).get(black_box(Axis::Y)));
+        bench.iter(|| black_box(a).get_axis(black_box(Axis::Y)));
+    });
+
+    g.finish();
+}
+
+// ---------------------------------------------------------------------------
+// Phase 07 types: MobCategory, SoundSource, EntitySpawnReason
+// ---------------------------------------------------------------------------
+
+fn bench_mob_category(c: &mut Criterion) {
+    let mut g = c.benchmark_group("mob_category");
+
+    g.bench_function("by_id", |b| {
+        b.iter(|| MobCategory::by_id(black_box(3)));
+    });
+
+    g.bench_function("by_name", |b| {
+        b.iter(|| MobCategory::by_name(black_box("monster")));
+    });
+
+    let cat = MobCategory::Monster;
+    g.bench_function("id", |b| {
+        b.iter(|| black_box(cat).id());
+    });
+
+    g.bench_function("name", |b| {
+        b.iter(|| black_box(cat).name());
+    });
+
+    g.finish();
+}
+
+fn bench_sound_source(c: &mut Criterion) {
+    let mut g = c.benchmark_group("sound_source");
+
+    g.bench_function("by_id", |b| {
+        b.iter(|| SoundSource::by_id(black_box(5)));
+    });
+
+    g.bench_function("by_name", |b| {
+        b.iter(|| SoundSource::by_name(black_box("records")));
+    });
+
+    let src = SoundSource::Records;
+    g.bench_function("id", |b| {
+        b.iter(|| black_box(src).id());
+    });
+
+    g.finish();
+}
+
+fn bench_entity_spawn_reason(c: &mut Criterion) {
+    let mut g = c.benchmark_group("entity_spawn_reason");
+
+    g.bench_function("by_id", |b| {
+        b.iter(|| EntitySpawnReason::by_id(black_box(2)));
+    });
+
+    g.bench_function("by_name", |b| {
+        b.iter(|| EntitySpawnReason::by_name(black_box("spawner")));
+    });
+
+    let reason = EntitySpawnReason::Spawner;
+    g.bench_function("id", |b| {
+        b.iter(|| black_box(reason).id());
     });
 
     g.finish();
@@ -305,6 +371,9 @@ criterion_group!(
     bench_resource_location,
     bench_direction,
     bench_vec3i,
+    bench_mob_category,
+    bench_sound_source,
+    bench_entity_spawn_reason,
 );
 
 criterion_main!(benches);

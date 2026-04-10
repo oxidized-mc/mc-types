@@ -2,7 +2,8 @@
 //!
 //! Keeps coordinate and vector types consistent while minimizing hand-written impls.
 
-/// Generate `Add`, `Sub`, and optionally `Neg` operator trait impls for a vector type.
+/// Generate `Add`, `Sub`, `AddAssign`, `SubAssign`, and optionally `Neg` operator trait impls
+/// for a vector type.
 ///
 /// Requires the type to have:
 /// - `add_vec(self, rhs: Self) -> Self`
@@ -12,8 +13,8 @@
 /// # Usage
 ///
 /// ```ignore
-/// impl_vector_ops!(Vec3);              // Add + Sub + Neg
-/// impl_vector_ops!(Vec3i, no_neg);     // Add + Sub only
+/// impl_vector_ops!(Vec3);              // Add + Sub + AddAssign + SubAssign + Neg
+/// impl_vector_ops!(Vec3i, no_neg);     // Add + Sub + AddAssign + SubAssign only
 /// ```
 macro_rules! impl_vector_ops {
     ($type:ty) => {
@@ -41,6 +42,18 @@ macro_rules! impl_vector_ops {
 
             fn sub(self, rhs: $type) -> $type {
                 self.subtract_vec(rhs)
+            }
+        }
+
+        impl std::ops::AddAssign for $type {
+            fn add_assign(&mut self, rhs: $type) {
+                *self = self.add_vec(rhs);
+            }
+        }
+
+        impl std::ops::SubAssign for $type {
+            fn sub_assign(&mut self, rhs: $type) {
+                *self = self.subtract_vec(rhs);
             }
         }
     };
@@ -94,7 +107,7 @@ macro_rules! impl_axis_accessor {
     ($type:ty, $scalar:ty) => {
         impl $type {
             /// Returns the component along the given axis.
-            pub fn get_axis(self, axis: Axis) -> $scalar {
+            pub const fn get_axis(self, axis: Axis) -> $scalar {
                 match axis {
                     Axis::X => self.x,
                     Axis::Y => self.y,
@@ -103,7 +116,7 @@ macro_rules! impl_axis_accessor {
             }
 
             /// Returns a copy with the given axis component replaced.
-            pub fn with_axis(self, axis: Axis, value: $scalar) -> Self {
+            pub const fn with_axis(self, axis: Axis, value: $scalar) -> Self {
                 match axis {
                     Axis::X => Self { x: value, ..self },
                     Axis::Y => Self { y: value, ..self },
@@ -171,9 +184,8 @@ macro_rules! impl_protocol_enum {
             /// is out of range.
             pub fn read(buf: &mut ::bytes::Bytes) -> Result<Self, ::oxidized_codec::types::TypeError> {
                 let id = ::oxidized_codec::varint::read_varint_buf(buf)?;
-                $enum_ty::by_id(id).ok_or(::oxidized_codec::types::TypeError::UnexpectedEof {
-                    need: 1,
-                    have: 0,
+                $enum_ty::by_id(id).ok_or(::oxidized_codec::types::TypeError::InvalidValue {
+                    value: id,
                 })
             }
 

@@ -356,4 +356,31 @@ mod tests {
             insta::assert_snapshot!(Vec2::ZERO.to_string(), @"(0, 0)");
         }
     }
+
+    // ── NaN / Infinity edge cases ───────────────────────────────────
+
+    #[test]
+    fn test_vec2_nan_length_sqr() {
+        let v = Vec2::new(f32::NAN, 0.0);
+        assert!(v.length_sqr().is_nan());
+    }
+
+    #[test]
+    fn test_vec2_nan_length() {
+        let v = Vec2::new(0.0, f32::NAN);
+        assert!(v.length().is_nan());
+    }
+
+    #[test]
+    fn test_vec2_infinity_length() {
+        let v = Vec2::new(f32::INFINITY, 0.0);
+        assert!(v.length().is_infinite());
+    }
+
+    #[test]
+    fn test_vec2_nan_normalized() {
+        let v = Vec2::new(f32::NAN, 0.0);
+        let n = v.normalized();
+        assert!(n.x.is_nan());
+    }
 }

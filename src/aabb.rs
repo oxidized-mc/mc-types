@@ -1013,4 +1013,48 @@ mod tests {
             );
         }
     }
+
+    // ── NaN / Infinity edge cases ───────────────────────────────────
+
+    #[test]
+    fn test_aabb_nan_contains() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        assert!(!bb.contains(f64::NAN, 0.5, 0.5));
+    }
+
+    #[test]
+    fn test_aabb_infinity_inflate() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let inflated = bb.inflate(f64::INFINITY);
+        assert!(inflated.min_x.is_infinite());
+        assert!(inflated.max_x.is_infinite());
+    }
+
+    #[test]
+    fn test_aabb_nan_x_size() {
+        let bb = Aabb {
+            min_x: f64::NAN,
+            min_y: 0.0,
+            min_z: 0.0,
+            max_x: 1.0,
+            max_y: 1.0,
+            max_z: 1.0,
+        };
+        assert!(bb.x_size().is_nan());
+        assert!(bb.has_nan());
+    }
+
+    #[test]
+    fn test_aabb_nan_center() {
+        let bb = Aabb {
+            min_x: f64::NAN,
+            min_y: 0.0,
+            min_z: 0.0,
+            max_x: 1.0,
+            max_y: 1.0,
+            max_z: 1.0,
+        };
+        let center = bb.get_center();
+        assert!(center.x.is_nan());
+    }
 }

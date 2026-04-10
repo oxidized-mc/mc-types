@@ -53,7 +53,7 @@ impl BlockState {
     /// is outside the valid `u16` range (`0..=65535`).
     pub fn read(buf: &mut Bytes) -> Result<Self, TypeError> {
         let id = varint::read_varint_buf(buf)?;
-        let id = u16::try_from(id).map_err(|_| TypeError::UnexpectedEof { need: 1, have: 0 })?;
+        let id = u16::try_from(id).map_err(|_| TypeError::InvalidValue { value: id })?;
         Ok(Self(id))
     }
 

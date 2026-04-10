@@ -140,12 +140,9 @@ impl Vec3i {
     }
 
     /// Selects the component on the given axis.
+    #[deprecated(since = "0.3.0", note = "use `get_axis` instead")]
     pub fn get(self, axis: Axis) -> i32 {
-        match axis {
-            Axis::X => self.x,
-            Axis::Y => self.y,
-            Axis::Z => self.z,
-        }
+        self.get_axis(axis)
     }
 
     /// Returns a new vector with all components multiplied by `scale`.
@@ -181,6 +178,7 @@ impl Vec3i {
 
 impl_vector_ops!(Vec3i, no_neg);
 impl_directional!(Vec3i);
+impl_axis_accessor!(Vec3i, i32);
 
 impl fmt::Display for Vec3i {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -345,9 +343,17 @@ mod tests {
     #[test]
     fn test_vec3i_get_axis() {
         let v = Vec3i::new(10, 20, 30);
-        assert_eq!(v.get(Axis::X), 10);
-        assert_eq!(v.get(Axis::Y), 20);
-        assert_eq!(v.get(Axis::Z), 30);
+        assert_eq!(v.get_axis(Axis::X), 10);
+        assert_eq!(v.get_axis(Axis::Y), 20);
+        assert_eq!(v.get_axis(Axis::Z), 30);
+    }
+
+    #[test]
+    fn test_vec3i_with_axis() {
+        let v = Vec3i::new(10, 20, 30);
+        assert_eq!(v.with_axis(Axis::X, 99), Vec3i::new(99, 20, 30));
+        assert_eq!(v.with_axis(Axis::Y, 99), Vec3i::new(10, 99, 30));
+        assert_eq!(v.with_axis(Axis::Z, 99), Vec3i::new(10, 20, 99));
     }
 
     // ── Multiply ────────────────────────────────────────────────────

@@ -5,6 +5,11 @@
 use crate::aabb::Aabb;
 use crate::vec3::Vec3;
 
+/// The default eye-height ratio when none is explicitly provided.
+///
+/// Vanilla uses `height * 0.85` as the default eye position.
+const DEFAULT_EYE_HEIGHT_RATIO: f32 = 0.85;
+
 /// Width and height of an entity's axis-aligned hitbox.
 ///
 /// Matches vanilla `net.minecraft.world.entity.EntityDimensions`.
@@ -26,18 +31,41 @@ pub struct EntityDimensions {
     pub width: f32,
     /// The height of the entity (hitbox extent in Y).
     pub height: f32,
+    /// The vertical eye position within the hitbox.
+    pub eye_height: f32,
+    /// Whether the dimensions are fixed (unaffected by scaling).
+    pub fixed: bool,
 }
 
 impl EntityDimensions {
-    /// Creates new entity dimensions.
-    pub const fn new(width: f32, height: f32) -> Self {
-        Self { width, height }
+    /// Creates new scalable entity dimensions with a default eye height.
+    pub fn new(width: f32, height: f32) -> Self {
+        Self {
+            width,
+            height,
+            eye_height: height * DEFAULT_EYE_HEIGHT_RATIO,
+            fixed: false,
+        }
     }
 
-    /// Creates scalable entity dimensions (same as `new` — the `fixed` flag
-    /// from vanilla is handled by the entity system, not here).
-    pub const fn scalable(width: f32, height: f32) -> Self {
-        Self { width, height }
+    /// Creates scalable entity dimensions with a default eye height.
+    pub fn scalable(width: f32, height: f32) -> Self {
+        Self::new(width, height)
+    }
+
+    /// Creates fixed entity dimensions that ignore scaling.
+    pub fn fixed(width: f32, height: f32) -> Self {
+        Self {
+            width,
+            height,
+            eye_height: height * DEFAULT_EYE_HEIGHT_RATIO,
+            fixed: true,
+        }
+    }
+
+    /// Returns a copy with the given eye height.
+    pub fn with_eye_height(self, eye_height: f32) -> Self {
+        Self { eye_height, ..self }
     }
 
     /// Builds an AABB centered at the given position with these dimensions.
@@ -57,11 +85,16 @@ impl EntityDimensions {
         )
     }
 
-    /// Scales both dimensions by a factor.
+    /// Scales both dimensions by a factor. Fixed dimensions are unaffected.
     pub fn scale(self, factor: f32) -> Self {
+        if self.fixed {
+            return self;
+        }
         Self {
             width: self.width * factor,
             height: self.height * factor,
+            eye_height: self.eye_height * factor,
+            fixed: false,
         }
     }
 }
@@ -85,12 +118,29 @@ mod tests {
         let d = EntityDimensions::new(0.6, 1.8);
         assert!((d.width - 0.6).abs() < 1e-6);
         assert!((d.height - 1.8).abs() < 1e-6);
+        assert!((d.eye_height - 1.8 * 0.85).abs() < 1e-6);
+        assert!(!d.fixed);
     }
 
     #[test]
     fn test_entity_dimensions_scalable() {
         let d = EntityDimensions::scalable(0.6, 1.8);
         assert_eq!(d, EntityDimensions::new(0.6, 1.8));
+    }
+
+    #[test]
+    fn test_entity_dimensions_fixed() {
+        let d = EntityDimensions::fixed(0.6, 1.8);
+        assert!((d.width - 0.6).abs() < 1e-6);
+        assert!((d.height - 1.8).abs() < 1e-6);
+        assert!(d.fixed);
+    }
+
+    #[test]
+    fn test_entity_dimensions_with_eye_height() {
+        let d = EntityDimensions::new(0.6, 1.8).with_eye_height(1.62);
+        assert!((d.eye_height - 1.62).abs() < 1e-6);
+        assert!((d.width - 0.6).abs() < 1e-6);
     }
 
     // ── make_bounding_box ───────────────────────────────────────────────
@@ -128,6 +178,7 @@ mod tests {
         let d = EntityDimensions::new(1.0, 2.0).scale(2.0);
         assert!((d.width - 2.0).abs() < 1e-6);
         assert!((d.height - 4.0).abs() < 1e-6);
+        assert!((d.eye_height - 2.0 * 0.85 * 2.0).abs() < 1e-6);
     }
 
     #[test]
@@ -135,6 +186,14 @@ mod tests {
         let d = EntityDimensions::new(1.0, 2.0).scale(0.0);
         assert_eq!(d.width, 0.0);
         assert_eq!(d.height, 0.0);
+        assert_eq!(d.eye_height, 0.0);
+    }
+
+    #[test]
+    fn test_entity_dimensions_fixed_ignores_scale() {
+        let d = EntityDimensions::fixed(1.0, 2.0);
+        let scaled = d.scale(3.0);
+        assert_eq!(scaled, d);
     }
 
     // ── Display ─────────────────────────────────────────────────────────

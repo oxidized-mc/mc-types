@@ -9,6 +9,16 @@
 /// is negative, because Rust/C truncation rounds toward zero rather than
 /// toward negative infinity. Non-finite inputs (NaN, ±infinity) return the
 /// saturating cast to avoid overflow panics.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::floor(5.7), 5);
+/// assert_eq!(mth::floor(-3.1), -4);
+/// assert_eq!(mth::floor(0.0), 0);
+/// ```
 pub fn floor(value: f64) -> i32 {
     let i = value as i32;
     if !value.is_finite() {
@@ -20,6 +30,16 @@ pub fn floor(value: f64) -> i32 {
 /// Ceils a `f64` to `i32`, matching Java `Mth.ceil(double)`.
 ///
 /// Non-finite inputs return the saturating cast.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::ceil(5.1), 6);
+/// assert_eq!(mth::ceil(-3.7), -3);
+/// assert_eq!(mth::ceil(5.0), 5);
+/// ```
 pub fn ceil(value: f64) -> i32 {
     let i = value as i32;
     if !value.is_finite() {
@@ -31,6 +51,15 @@ pub fn ceil(value: f64) -> i32 {
 /// Floors a `f32` to `i32`, matching Java `Mth.floor(float)`.
 ///
 /// Non-finite inputs return the saturating cast.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::floor_f(5.7), 5);
+/// assert_eq!(mth::floor_f(-3.1), -4);
+/// ```
 pub fn floor_f(value: f32) -> i32 {
     let i = value as i32;
     if !value.is_finite() {
@@ -42,6 +71,15 @@ pub fn floor_f(value: f32) -> i32 {
 /// Ceils a `f32` to `i32`, matching Java `Mth.ceil(float)`.
 ///
 /// Non-finite inputs return the saturating cast.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::ceil_f(5.1), 6);
+/// assert_eq!(mth::ceil_f(-3.7), -3);
+/// ```
 pub fn ceil_f(value: f32) -> i32 {
     let i = value as i32;
     if !value.is_finite() {
@@ -51,6 +89,16 @@ pub fn ceil_f(value: f32) -> i32 {
 }
 
 /// Clamps a `f64` value between `min` and `max`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::clamp(5.0, 0.0, 10.0), 5.0);
+/// assert_eq!(mth::clamp(-1.0, 0.0, 10.0), 0.0);
+/// assert_eq!(mth::clamp(15.0, 0.0, 10.0), 10.0);
+/// ```
 pub fn clamp(value: f64, min: f64, max: f64) -> f64 {
     if value < min {
         min
@@ -62,6 +110,16 @@ pub fn clamp(value: f64, min: f64, max: f64) -> f64 {
 }
 
 /// Clamps an `i32` value between `min` and `max`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::clamp_i32(5, 0, 10), 5);
+/// assert_eq!(mth::clamp_i32(-5, 0, 10), 0);
+/// assert_eq!(mth::clamp_i32(15, 0, 10), 10);
+/// ```
 pub fn clamp_i32(value: i32, min: i32, max: i32) -> i32 {
     if value < min {
         min
@@ -75,6 +133,16 @@ pub fn clamp_i32(value: i32, min: i32, max: i32) -> i32 {
 /// Linear interpolation between `start` and `end` by `delta`.
 ///
 /// `delta = 0.0` → `start`, `delta = 1.0` → `end`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::lerp(0.0, 10.0, 20.0), 10.0);
+/// assert_eq!(mth::lerp(1.0, 10.0, 20.0), 20.0);
+/// assert!((mth::lerp(0.5, 10.0, 20.0) - 15.0).abs() < 1e-10);
+/// ```
 pub fn lerp(delta: f64, start: f64, end: f64) -> f64 {
     start + delta * (end - start)
 }
@@ -86,6 +154,16 @@ pub fn lerp(delta: f64, start: f64, end: f64) -> f64 {
 /// # Panics
 ///
 /// Panics if `y` is zero (division by zero).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert_eq!(mth::positive_modulo(7, 3), 1);
+/// assert_eq!(mth::positive_modulo(-1, 16), 15);
+/// assert_eq!(mth::positive_modulo(0, 5), 0);
+/// ```
 pub fn positive_modulo(x: i32, y: i32) -> i32 {
     let r = x % y;
     if r < 0 { r + y } else { r }
@@ -94,6 +172,15 @@ pub fn positive_modulo(x: i32, y: i32) -> i32 {
 /// Wraps an angle in degrees to the range `[-180, 180)`.
 ///
 /// Matches Java `Mth.wrapDegrees(double)`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert!((mth::wrapping_degrees(270.0) - (-90.0)).abs() < 1e-10);
+/// assert!((mth::wrapping_degrees(-270.0) - 90.0).abs() < 1e-10);
+/// ```
 pub fn wrapping_degrees(degrees: f64) -> f64 {
     let mut d = degrees % 360.0;
     if d >= 180.0 {
@@ -106,16 +193,43 @@ pub fn wrapping_degrees(degrees: f64) -> f64 {
 }
 
 /// Converts degrees to radians.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// let r = mth::deg_to_rad(90.0);
+/// assert!((r - std::f32::consts::FRAC_PI_2).abs() < 1e-6);
+/// ```
 pub fn deg_to_rad(degrees: f32) -> f32 {
     degrees * (std::f32::consts::PI / 180.0)
 }
 
 /// Converts radians to degrees.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// let d = mth::rad_to_deg(std::f32::consts::PI);
+/// assert!((d - 180.0).abs() < 1e-3);
+/// ```
 pub fn rad_to_deg(radians: f32) -> f32 {
     radians * (180.0 / std::f32::consts::PI)
 }
 
 /// Square root of a `f32`, matching Java `Mth.sqrt(float)`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::mth;
+///
+/// assert!((mth::sqrt(9.0) - 3.0).abs() < 1e-6);
+/// assert_eq!(mth::sqrt(0.0), 0.0);
+/// ```
 pub fn sqrt(value: f32) -> f32 {
     value.sqrt()
 }

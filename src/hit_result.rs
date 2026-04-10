@@ -17,6 +17,16 @@ pub enum HitResultType {
     Entity,
 }
 
+impl std::fmt::Display for HitResultType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HitResultType::Miss => f.write_str("miss"),
+            HitResultType::Block => f.write_str("block"),
+            HitResultType::Entity => f.write_str("entity"),
+        }
+    }
+}
+
 /// Result of a block raycast.
 ///
 /// Contains the precise hit location, the face that was hit, the block
@@ -33,6 +43,8 @@ pub struct BlockHitResult {
     pub miss: bool,
     /// Whether the ray started inside the block.
     pub inside: bool,
+    /// Whether this hit was against the world border.
+    pub world_border_hit: bool,
 }
 
 impl BlockHitResult {
@@ -44,6 +56,7 @@ impl BlockHitResult {
             block_pos,
             miss: true,
             inside: false,
+            world_border_hit: false,
         }
     }
 
@@ -55,6 +68,7 @@ impl BlockHitResult {
             block_pos,
             miss: false,
             inside: false,
+            world_border_hit: false,
         }
     }
 
@@ -66,12 +80,26 @@ impl BlockHitResult {
             block_pos,
             miss: false,
             inside: true,
+            world_border_hit: false,
         }
     }
 
     /// Whether this result represents a miss.
     pub fn is_miss(&self) -> bool {
         self.miss
+    }
+
+    /// Whether this hit was against the world border.
+    pub fn is_world_border_hit(&self) -> bool {
+        self.world_border_hit
+    }
+
+    /// Returns a copy with `world_border_hit` set to `true`.
+    pub fn hit_border(self) -> Self {
+        Self {
+            world_border_hit: true,
+            ..self
+        }
     }
 
     /// Returns the hit result type discriminant.
@@ -115,6 +143,7 @@ mod tests {
         assert!(r.is_miss());
         assert_eq!(r.get_type(), HitResultType::Miss);
         assert!(!r.inside);
+        assert!(!r.is_world_border_hit());
     }
 
     #[test]
@@ -123,6 +152,7 @@ mod tests {
         assert!(!r.is_miss());
         assert_eq!(r.get_type(), HitResultType::Block);
         assert!(!r.inside);
+        assert!(!r.is_world_border_hit());
     }
 
     #[test]
@@ -132,6 +162,7 @@ mod tests {
         assert!(!r.is_miss());
         assert_eq!(r.get_type(), HitResultType::Block);
         assert!(r.inside);
+        assert!(!r.is_world_border_hit());
     }
 
     // ── Modifiers ───────────────────────────────────────────────────────
@@ -162,5 +193,34 @@ mod tests {
         assert_ne!(HitResultType::Miss, HitResultType::Block);
         assert_ne!(HitResultType::Block, HitResultType::Entity);
         assert_ne!(HitResultType::Miss, HitResultType::Entity);
+    }
+
+    #[test]
+    fn test_hit_result_type_display() {
+        assert_eq!(HitResultType::Miss.to_string(), "miss");
+        assert_eq!(HitResultType::Block.to_string(), "block");
+        assert_eq!(HitResultType::Entity.to_string(), "entity");
+    }
+
+    // ── world border ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_hit_border_sets_flag() {
+        let r = BlockHitResult::hit(sample_location(), Direction::Up, BlockPos::new(1, 2, 3));
+        assert!(!r.is_world_border_hit());
+        let r2 = r.hit_border();
+        assert!(r2.is_world_border_hit());
+        assert!(!r2.is_miss());
+    }
+
+    #[test]
+    fn test_hit_border_preserves_fields() {
+        let r = BlockHitResult::hit(sample_location(), Direction::North, BlockPos::new(1, 2, 3));
+        let r2 = r.hit_border();
+        assert_eq!(r2.location, r.location);
+        assert_eq!(r2.direction, r.direction);
+        assert_eq!(r2.block_pos, r.block_pos);
+        assert_eq!(r2.miss, r.miss);
+        assert_eq!(r2.inside, r.inside);
     }
 }

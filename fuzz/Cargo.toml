@@ -34,3 +34,13 @@ doc = false
 name = "fuzz_section_pos_packed"
 path = "fuzz_targets/fuzz_section_pos_packed.rs"
 doc = false
+
+[[bin]]
+name = "fuzz_wire_enums"
+path = "fuzz_targets/fuzz_wire_enums.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_vec3"
+path = "fuzz_targets/fuzz_vec3.rs"
+doc = false

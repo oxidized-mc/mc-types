@@ -15,12 +15,22 @@ pub enum SwingSource {
     Server,
 }
 
+impl std::fmt::Display for SwingSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SwingSource::None => f.write_str("none"),
+            SwingSource::Client => f.write_str("client"),
+            SwingSource::Server => f.write_str("server"),
+        }
+    }
+}
+
 /// Result of an interaction attempt.
 ///
 /// In vanilla 26.1 this is a sealed interface with record variants.
 /// The wire protocol doesn't transmit this type directly, but it governs
 /// server-side interaction logic.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InteractionResult {
     /// Interaction succeeded. Contains the swing source for animation.
     Success {
