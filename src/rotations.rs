@@ -1,7 +1,8 @@
 //! [`Rotations`] — three-axis rotation in degrees.
 //!
-//! Used for armor stand body-part orientations. Each component is normalised
-//! to `[0, 360)` on construction; NaN and infinite values are clamped to zero.
+//! Used for armor stand body-part orientations. Each component is reduced
+//! modulo 360 on construction (preserving sign, matching Java's `%` operator);
+//! NaN and infinite values are clamped to zero.
 
 use bytes::{Bytes, BytesMut};
 
@@ -9,8 +10,9 @@ use oxidized_codec::types::{self, TypeError};
 
 /// Three-axis rotation in degrees (pitch, yaw, roll).
 ///
-/// Matches vanilla `net.minecraft.core.Rotations`. Components are normalised
-/// to `[0, 360)` on construction, and NaN/infinite inputs become `0.0`.
+/// Matches vanilla `net.minecraft.core.Rotations`. Components are reduced
+/// modulo 360 on construction (preserving sign, like Java's `%` operator),
+/// and NaN/infinite inputs become `0.0`.
 ///
 /// # Wire format
 ///
@@ -24,10 +26,10 @@ use oxidized_codec::types::{self, TypeError};
 /// let r = Rotations::new(45.0, 90.0, 0.0);
 /// assert_eq!(r.x, 45.0);
 ///
-/// // Values wrap to [0, 360)
+/// // Values are reduced mod 360, preserving sign
 /// let wrapped = Rotations::new(370.0, -10.0, 0.0);
 /// assert!((wrapped.x - 10.0).abs() < 1e-6);
-/// assert!((wrapped.y - 350.0).abs() < 1e-6);
+/// assert!((wrapped.y - (-10.0)).abs() < 1e-6);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rotations {
@@ -39,10 +41,11 @@ pub struct Rotations {
     pub z: f32,
 }
 
-/// Clamp a single rotation component: NaN/infinite → 0, then wrap to `[0, 360)`.
+/// Sanitize a single rotation component: NaN/infinite → 0, then reduce mod 360
+/// (preserving sign, matching Java's `%` operator).
 fn sanitize(v: f32) -> f32 {
     if v.is_finite() {
-        v.rem_euclid(360.0)
+        v % 360.0
     } else {
         0.0
     }
@@ -58,7 +61,8 @@ impl Rotations {
 
     /// Creates a new `Rotations`, sanitising each component.
     ///
-    /// NaN and infinite values become `0.0`; all values are wrapped to `[0, 360)`.
+    /// NaN and infinite values become `0.0`; all values are reduced mod 360
+    /// (preserving sign).
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self {
             x: sanitize(x),
@@ -119,7 +123,8 @@ mod tests {
     fn test_rotations_new_normalises_values() {
         let r = Rotations::new(370.0, -10.0, 720.0);
         assert!((r.x - 10.0).abs() < 1e-4);
-        assert!((r.y - 350.0).abs() < 1e-4);
+        // Vanilla Java % preserves sign: -10.0 % 360.0 == -10.0
+        assert!((r.y - (-10.0)).abs() < 1e-4);
         assert!(r.z.abs() < 1e-4);
     }
 
@@ -208,9 +213,10 @@ mod tests {
                 z in -1000.0f32..1000.0,
             ) {
                 let r = Rotations::new(x, y, z);
-                prop_assert!(r.x >= 0.0 && r.x < 360.0);
-                prop_assert!(r.y >= 0.0 && r.y < 360.0);
-                prop_assert!(r.z >= 0.0 && r.z < 360.0);
+                // Java % preserves sign: result is in (-360, 360)
+                prop_assert!(r.x > -360.0 && r.x < 360.0);
+                prop_assert!(r.y > -360.0 && r.y < 360.0);
+                prop_assert!(r.z > -360.0 && r.z < 360.0);
             }
         }
     }
