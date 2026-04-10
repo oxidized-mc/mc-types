@@ -44,11 +44,7 @@ pub struct Rotations {
 /// Sanitize a single rotation component: NaN/infinite → 0, then reduce mod 360
 /// (preserving sign, matching Java's `%` operator).
 fn sanitize(v: f32) -> f32 {
-    if v.is_finite() {
-        v % 360.0
-    } else {
-        0.0
-    }
+    if v.is_finite() { v % 360.0 } else { 0.0 }
 }
 
 impl Rotations {

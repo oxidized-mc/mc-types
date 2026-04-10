@@ -58,11 +58,11 @@ pub const ALL: [Direction; 6] = [
     Direction::East,
 ];
 
-/// The four horizontal directions: South, West, North, East (2D data-value order).
+/// The four horizontal directions in vanilla ordinal order (by enum discriminant).
 pub const HORIZONTALS: [Direction; 4] = [
+    Direction::North,
     Direction::South,
     Direction::West,
-    Direction::North,
     Direction::East,
 ];
 
@@ -792,9 +792,11 @@ mod tests {
     fn test_plane_horizontal_directions() {
         let dirs = Plane::Horizontal.directions();
         assert_eq!(dirs.len(), 4);
-        for d in dirs {
-            assert!(d.is_horizontal());
-        }
+        // Vanilla ordinal order: North, South, West, East
+        assert_eq!(dirs[0], Direction::North);
+        assert_eq!(dirs[1], Direction::South);
+        assert_eq!(dirs[2], Direction::West);
+        assert_eq!(dirs[3], Direction::East);
     }
 
     #[test]
