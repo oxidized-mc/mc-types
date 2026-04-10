@@ -20,8 +20,13 @@ oxidized-types       = "0.1.0-dev"
 thiserror     = "2"
 
 [dev-dependencies]
-proptest = "1"
-insta    = "1"
+proptest  = "1"
+insta     = "1"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name    = "benchmarks"
+harness = false
 
 [lints.rust]
 missing_docs   = "warn"
