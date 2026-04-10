@@ -20,12 +20,12 @@ oxidized-mc-types = "x.x.x" # Check crates.io for the latest version
 ```
 
 ```rust
-use oxidized_mc_types::{BlockPos, SectionPos, Vec3, Direction, ResourceLocation};
+use oxidized_mc_types::{BlockPos, ChunkPosExt, SectionPos, Vec3, Direction, ResourceLocation};
 
 // Block positions with type-safe coordinate conversions
 let block = BlockPos::new(100, 64, -200);
 let section = SectionPos::of_block_pos(&block);
-let chunk = block.chunk_pos();
+let chunk = ChunkPos::from_block_pos(&block);
 
 // Entity positions with floating-point precision
 let pos = Vec3::new(100.5, 64.0, -200.5);
@@ -69,11 +69,15 @@ let opposite = facing.opposite();
 | `GameType` | Survival / Creative / Adventure / Spectator | VarInt (0–3) |
 | `Difficulty` | Peaceful / Easy / Normal / Hard | VarInt (0–3) |
 | `Direction` | Down / Up / North / South / West / East | VarInt (0–5) |
+| `Axis` | X / Y / Z axis of a direction | — |
+| `AxisDirection` | Positive / Negative along an axis | — |
+| `Plane` | Horizontal / Vertical direction grouping | — |
 | `Pose` | Entity pose (standing, sneaking, swimming, etc.) | VarInt (0–17) |
 | `ChatVisibility` | Full / System / Hidden | VarInt (0–2) |
 | `HumanoidArm` | Left / Right | VarInt (0–1) |
 | `ParticleStatus` | All / Decreased / Minimal | VarInt (0–2) |
 | `EquipmentSlot` | Main hand, off hand, armor slots, body | VarInt (0–7) |
+| `EquipmentSlotType` | Hand / Armor / Body slot category | — |
 | `InteractionHand` | Main hand / Off hand | VarInt (0–1) |
 | `MobCategory` | Monster / Creature / Ambient / etc. | VarInt (0–7) |
 | `SoundSource` | Master / Music / Record / etc. | VarInt (0–10) |
@@ -86,6 +90,18 @@ let opposite = facing.opposite();
 | `ResourceLocation` | Namespaced identifier (`minecraft:stone`) |
 | `ResourceKey<T>` | Typed registry key binding a `ResourceLocation` to a specific registry |
 
+### Errors
+
+| Type | Description |
+|------|-------------|
+| `McTypesError` | Error enum for construction/validation failures across all types |
+
+### Math Utilities
+
+| Module | Description |
+|--------|-------------|
+| `mth` | Floor, ceil, clamp, lerp, and other math functions matching vanilla's `Mth` class |
+
 ### Interaction & Raycasting
 
 | Type | Description |
@@ -93,6 +109,7 @@ let opposite = facing.opposite();
 | `BlockHitResult` | Result of a block raycast (location, face, block position) |
 | `HitResultType` | Miss / Block / Entity discriminant |
 | `InteractionResult` | Outcome of a block or entity interaction |
+| `SwingSource` | Which hand triggered the swing animation |
 | `BlockState` | Opaque block state identifier (data resolution is the registry's job) |
 
 ## Coordinate Conversions
@@ -105,13 +122,13 @@ let opposite = facing.opposite();
      │
      ├──► SectionPos    (>> 4 on each axis)
      │
-     └──► ChunkPos      (>> 4 on x/z, drops y)
+     └──► ChunkPos      (ChunkPos::from_block_pos, >> 4 on x/z, drops y)
            │
            └──► SectionPos  (with explicit y section)
 ```
 
-All conversions are provided as methods — use `block_pos.chunk_pos()`,
-`SectionPos::from_block_pos()`, etc. Never perform manual bit-shifts.
+All conversions are provided as methods — use `ChunkPos::from_block_pos()`,
+`SectionPos::of_block_pos()`, etc. Never perform manual bit-shifts.
 
 ## Wire Format
 
@@ -122,7 +139,7 @@ support packed `i64` encoding matching the vanilla protocol format.
 ## For Downstream Crate Authors
 
 - **Import types, not modules**: `use oxidized_mc_types::BlockPos;`
-- **Use conversion methods**: `block_pos.chunk_pos()` instead of manual `>> 4` shifts
+- **Use conversion methods**: `ChunkPos::from_block_pos(&pos)` instead of manual `>> 4` shifts
 - **Don't match on struct fields**: Field layout may change in future versions
 - **Check `McTypesError`**: Construction/validation errors are returned via this enum
 
