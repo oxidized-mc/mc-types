@@ -211,6 +211,34 @@ impl SectionPos {
     pub fn write(&self, buf: &mut BytesMut) {
         types::write_i64(buf, self.as_long());
     }
+
+    /// Returns an iterator over all block positions inside this section.
+    ///
+    /// Yields 4096 positions (16³), in Y-then-Z-then-X order.
+    pub fn blocks_inside(&self) -> impl Iterator<Item = BlockPos> {
+        let min_x = self.min_block_x();
+        let min_y = self.min_block_y();
+        let min_z = self.min_block_z();
+        (0..SECTION_SIZE).flat_map(move |dx| {
+            (0..SECTION_SIZE).flat_map(move |dz| {
+                (0..SECTION_SIZE).map(move |dy| BlockPos::new(min_x + dx, min_y + dy, min_z + dz))
+            })
+        })
+    }
+
+    /// Returns an iterator over section positions around and including the
+    /// section containing the given block position.
+    ///
+    /// Yields up to 27 sections (3³ cube centered on the target section).
+    pub fn around_and_at_block_pos(pos: &BlockPos) -> impl Iterator<Item = SectionPos> {
+        let center = SectionPos::of_block_pos(pos);
+        (-1..=1_i32).flat_map(move |dx| {
+            (-1..=1_i32).flat_map(move |dz| {
+                (-1..=1_i32)
+                    .map(move |dy| SectionPos::new(center.x + dx, center.y + dy, center.z + dz))
+            })
+        })
+    }
 }
 
 impl fmt::Display for SectionPos {
@@ -399,5 +427,40 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = SectionPos::read(&mut data).unwrap();
         assert_eq!(decoded, pos);
+    }
+
+    // ── blocks_inside ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_section_pos_blocks_inside_count() {
+        let section = SectionPos::new(0, 0, 0);
+        let count = section.blocks_inside().count();
+        assert_eq!(count, 4096); // 16³
+    }
+
+    #[test]
+    fn test_section_pos_blocks_inside_bounds() {
+        let section = SectionPos::new(1, -1, 2);
+        for pos in section.blocks_inside() {
+            assert!(pos.x >= section.min_block_x() && pos.x <= section.max_block_x());
+            assert!(pos.y >= section.min_block_y() && pos.y <= section.max_block_y());
+            assert!(pos.z >= section.min_block_z() && pos.z <= section.max_block_z());
+        }
+    }
+
+    // ── around_and_at_block_pos ─────────────────────────────────────────
+
+    #[test]
+    fn test_section_pos_around_and_at_block_pos_count() {
+        let count = SectionPos::around_and_at_block_pos(&BlockPos::new(0, 0, 0)).count();
+        assert_eq!(count, 27); // 3³
+    }
+
+    #[test]
+    fn test_section_pos_around_and_at_block_pos_contains_center() {
+        let pos = BlockPos::new(32, 64, 48);
+        let center = SectionPos::of_block_pos(&pos);
+        let sections: Vec<_> = SectionPos::around_and_at_block_pos(&pos).collect();
+        assert!(sections.contains(&center));
     }
 }

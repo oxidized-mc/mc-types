@@ -241,6 +241,54 @@ impl Direction {
     pub fn write(&self, buf: &mut BytesMut) {
         varint::write_varint_buf(i32::from(self.to_3d_data_value()), buf);
     }
+
+    /// Returns the nearest direction to the given normal vector.
+    ///
+    /// Picks the direction whose unit normal has the largest dot product
+    /// with the input. Ties are broken by the iteration order (Down first).
+    pub fn get_nearest(x: f64, y: f64, z: f64) -> Direction {
+        let mut best = Direction::Down;
+        let mut best_dot = f64::MIN;
+        for dir in ALL {
+            let dot = x * f64::from(dir.step_x())
+                + y * f64::from(dir.step_y())
+                + z * f64::from(dir.step_z());
+            if dot > best_dot {
+                best_dot = dot;
+                best = dir;
+            }
+        }
+        best
+    }
+}
+
+/// A logical grouping of directions (horizontal or vertical).
+///
+/// Matches vanilla's `Direction.Plane`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Plane {
+    /// The four horizontal directions: North, South, East, West.
+    Horizontal,
+    /// The two vertical directions: Up, Down.
+    Vertical,
+}
+
+impl Plane {
+    /// Returns an iterator over the directions in this plane.
+    pub fn directions(self) -> &'static [Direction] {
+        match self {
+            Plane::Horizontal => &HORIZONTALS,
+            Plane::Vertical => &[Direction::Down, Direction::Up],
+        }
+    }
+
+    /// Tests if the given direction belongs to this plane.
+    pub fn test(self, direction: Direction) -> bool {
+        match self {
+            Plane::Horizontal => direction.is_horizontal(),
+            Plane::Vertical => direction.is_vertical(),
+        }
+    }
 }
 
 impl fmt::Display for Direction {
@@ -676,5 +724,61 @@ mod tests {
         for dir in HORIZONTALS {
             assert!(dir.is_horizontal());
         }
+    }
+
+    // ── get_nearest ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_direction_get_nearest_up() {
+        assert_eq!(Direction::get_nearest(0.0, 1.0, 0.0), Direction::Up);
+    }
+
+    #[test]
+    fn test_direction_get_nearest_down() {
+        assert_eq!(Direction::get_nearest(0.0, -1.0, 0.0), Direction::Down);
+    }
+
+    #[test]
+    fn test_direction_get_nearest_east() {
+        assert_eq!(Direction::get_nearest(1.0, 0.0, 0.0), Direction::East);
+    }
+
+    #[test]
+    fn test_direction_get_nearest_west() {
+        assert_eq!(Direction::get_nearest(-1.0, 0.0, 0.0), Direction::West);
+    }
+
+    #[test]
+    fn test_direction_get_nearest_diagonal() {
+        // (1, 2, 0) → mostly up
+        assert_eq!(Direction::get_nearest(1.0, 2.0, 0.0), Direction::Up);
+    }
+
+    // ── Plane ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_plane_horizontal_directions() {
+        let dirs = Plane::Horizontal.directions();
+        assert_eq!(dirs.len(), 4);
+        for d in dirs {
+            assert!(d.is_horizontal());
+        }
+    }
+
+    #[test]
+    fn test_plane_vertical_directions() {
+        let dirs = Plane::Vertical.directions();
+        assert_eq!(dirs.len(), 2);
+        for d in dirs {
+            assert!(d.is_vertical());
+        }
+    }
+
+    #[test]
+    fn test_plane_test_membership() {
+        assert!(Plane::Horizontal.test(Direction::North));
+        assert!(!Plane::Horizontal.test(Direction::Up));
+        assert!(Plane::Vertical.test(Direction::Up));
+        assert!(!Plane::Vertical.test(Direction::East));
     }
 }

@@ -204,6 +204,36 @@ impl BlockPos {
     pub fn write(&self, buf: &mut BytesMut) {
         types::write_i64(buf, self.as_long());
     }
+
+    /// Returns an iterator over all block positions in the closed range from
+    /// `min` to `max` (inclusive on all axes).
+    ///
+    /// Iterates in Y-then-Z-then-X order, matching vanilla's `betweenClosed`.
+    pub fn between_closed(min: BlockPos, max: BlockPos) -> impl Iterator<Item = BlockPos> {
+        let x0 = min.x.min(max.x);
+        let y0 = min.y.min(max.y);
+        let z0 = min.z.min(max.z);
+        let x1 = min.x.max(max.x);
+        let y1 = min.y.max(max.y);
+        let z1 = min.z.max(max.z);
+        (x0..=x1).flat_map(move |x| {
+            (z0..=z1).flat_map(move |z| (y0..=y1).map(move |y| BlockPos::new(x, y, z)))
+        })
+    }
+
+    /// Returns an iterator over all block positions within `distance`
+    /// (Manhattan distance) from this position.
+    ///
+    /// Includes the center position itself.
+    pub fn within_manhattan(self, distance: i32) -> impl Iterator<Item = BlockPos> {
+        (-distance..=distance).flat_map(move |dx| {
+            let remaining = distance - dx.abs();
+            (-remaining..=remaining).flat_map(move |dy| {
+                let r2 = remaining - dy.abs();
+                (-r2..=r2).map(move |dz| BlockPos::new(self.x + dx, self.y + dy, self.z + dz))
+            })
+        })
+    }
 }
 
 impl_directional!(BlockPos);
@@ -481,5 +511,63 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = BlockPos::read(&mut data).unwrap();
         assert_eq!(decoded, pos);
+    }
+
+    // ── between_closed ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_block_pos_between_closed_single() {
+        let positions: Vec<_> =
+            BlockPos::between_closed(BlockPos::new(0, 0, 0), BlockPos::new(0, 0, 0)).collect();
+        assert_eq!(positions.len(), 1);
+        assert_eq!(positions[0], BlockPos::new(0, 0, 0));
+    }
+
+    #[test]
+    fn test_block_pos_between_closed_cube() {
+        let positions: Vec<_> =
+            BlockPos::between_closed(BlockPos::new(0, 0, 0), BlockPos::new(1, 1, 1)).collect();
+        assert_eq!(positions.len(), 8); // 2×2×2
+    }
+
+    #[test]
+    fn test_block_pos_between_closed_reversed_args() {
+        let a: Vec<_> =
+            BlockPos::between_closed(BlockPos::new(0, 0, 0), BlockPos::new(2, 2, 2)).collect();
+        let b: Vec<_> =
+            BlockPos::between_closed(BlockPos::new(2, 2, 2), BlockPos::new(0, 0, 0)).collect();
+        assert_eq!(a.len(), b.len());
+    }
+
+    // ── within_manhattan ────────────────────────────────────────────────
+
+    #[test]
+    fn test_block_pos_within_manhattan_zero() {
+        let positions: Vec<_> = BlockPos::new(5, 5, 5).within_manhattan(0).collect();
+        assert_eq!(positions.len(), 1);
+        assert_eq!(positions[0], BlockPos::new(5, 5, 5));
+    }
+
+    #[test]
+    fn test_block_pos_within_manhattan_one() {
+        let positions: Vec<_> = BlockPos::ZERO.within_manhattan(1).collect();
+        // d=0: 1, d=1: 6 → total 7
+        assert_eq!(positions.len(), 7);
+        assert!(positions.contains(&BlockPos::ZERO));
+        assert!(positions.contains(&BlockPos::new(1, 0, 0)));
+        assert!(positions.contains(&BlockPos::new(-1, 0, 0)));
+    }
+
+    #[test]
+    fn test_block_pos_within_manhattan_all_within_distance() {
+        let center = BlockPos::new(10, 20, 30);
+        let distance = 2;
+        for pos in center.within_manhattan(distance) {
+            let d = center.dist_manhattan(&pos);
+            assert!(
+                d <= i64::from(distance),
+                "pos {pos:?} has manhattan dist {d}"
+            );
+        }
     }
 }

@@ -31,6 +31,22 @@ fn contract_axis(min: f64, max: f64, delta: f64) -> (f64, f64) {
     }
 }
 
+/// Computes the entry and exit t-values for a ray against one axis slab.
+///
+/// Returns `None` when the ray is parallel to the slab (direction ≈ 0).
+fn clip_axis(origin: f64, dir: f64, slab_min: f64, slab_max: f64) -> Option<(f64, f64)> {
+    if dir.abs() < 1.0e-7 {
+        return None;
+    }
+    let inv_dir = 1.0 / dir;
+    let mut t0 = (slab_min - origin) * inv_dir;
+    let mut t1 = (slab_max - origin) * inv_dir;
+    if t0 > t1 {
+        std::mem::swap(&mut t0, &mut t1);
+    }
+    Some((t0, t1))
+}
+
 /// An axis-aligned bounding box defined by minimum and maximum coordinates.
 ///
 /// Auto-corrects on construction so `min <= max` for all axes.
@@ -348,6 +364,80 @@ impl Aabb {
         let dy = 0.0_f64.max(self.min_y - pos.y).max(pos.y - self.max_y);
         let dz = 0.0_f64.max(self.min_z - pos.z).max(pos.z - self.max_z);
         dx * dx + dy * dy + dz * dz
+    }
+
+    /// Whether any coordinate component is NaN.
+    pub fn has_nan(&self) -> bool {
+        self.min_x.is_nan()
+            || self.min_y.is_nan()
+            || self.min_z.is_nan()
+            || self.max_x.is_nan()
+            || self.max_y.is_nan()
+            || self.max_z.is_nan()
+    }
+
+    /// Returns the size along a specific axis.
+    pub fn get_size(&self, axis: Axis) -> f64 {
+        match axis {
+            Axis::X => self.x_size(),
+            Axis::Y => self.y_size(),
+            Axis::Z => self.z_size(),
+        }
+    }
+
+    /// Ray-AABB intersection test (slab method).
+    ///
+    /// Returns the hit point along the ray from `from` to `to`, or `None`
+    /// if the ray misses the box.
+    pub fn clip(&self, from: Vec3, to: Vec3) -> Option<Vec3> {
+        let dir = to.subtract_vec(from);
+        if dir.length_sqr() < 1.0e-7 {
+            return None;
+        }
+
+        let (mut t_min, mut t_max) = (0.0_f64, 1.0_f64);
+
+        // X slab
+        if let Some((t0, t1)) = clip_axis(from.x, dir.x, self.min_x, self.max_x) {
+            t_min = t_min.max(t0);
+            t_max = t_max.min(t1);
+            if t_min > t_max {
+                return None;
+            }
+        } else {
+            // Ray parallel to slab — must be within slab bounds
+            if from.x < self.min_x || from.x > self.max_x {
+                return None;
+            }
+        }
+
+        // Y slab
+        if let Some((t0, t1)) = clip_axis(from.y, dir.y, self.min_y, self.max_y) {
+            t_min = t_min.max(t0);
+            t_max = t_max.min(t1);
+            if t_min > t_max {
+                return None;
+            }
+        } else {
+            if from.y < self.min_y || from.y > self.max_y {
+                return None;
+            }
+        }
+
+        // Z slab
+        if let Some((t0, t1)) = clip_axis(from.z, dir.z, self.min_z, self.max_z) {
+            t_min = t_min.max(t0);
+            t_max = t_max.min(t1);
+            if t_min > t_max {
+                return None;
+            }
+        } else {
+            if from.z < self.min_z || from.z > self.max_z {
+                return None;
+            }
+        }
+
+        Some(from.add(dir.x * t_min, dir.y * t_min, dir.z * t_min))
     }
 }
 
@@ -676,5 +766,120 @@ mod tests {
     fn test_aabb_display() {
         let bb = Aabb::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
         assert_eq!(format!("{bb}"), "AABB[1, 2, 3 -> 4, 5, 6]");
+    }
+
+    // ── has_nan ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_aabb_has_nan_false() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        assert!(!bb.has_nan());
+    }
+
+    #[test]
+    fn test_aabb_has_nan_min_x() {
+        let bb = Aabb {
+            min_x: f64::NAN,
+            min_y: 0.0,
+            min_z: 0.0,
+            max_x: 1.0,
+            max_y: 1.0,
+            max_z: 1.0,
+        };
+        assert!(bb.has_nan());
+    }
+
+    #[test]
+    fn test_aabb_has_nan_max_z() {
+        let bb = Aabb {
+            min_x: 0.0,
+            min_y: 0.0,
+            min_z: 0.0,
+            max_x: 1.0,
+            max_y: 1.0,
+            max_z: f64::NAN,
+        };
+        assert!(bb.has_nan());
+    }
+
+    // ── get_size ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_aabb_get_size_x() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 3.0, 5.0, 7.0);
+        assert!((bb.get_size(Axis::X) - 3.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_aabb_get_size_y() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 3.0, 5.0, 7.0);
+        assert!((bb.get_size(Axis::Y) - 5.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_aabb_get_size_z() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 3.0, 5.0, 7.0);
+        assert!((bb.get_size(Axis::Z) - 7.0).abs() < 1e-10);
+    }
+
+    // ── clip ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_aabb_clip_hit_through_center() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(-1.0, 0.5, 0.5);
+        let to = Vec3::new(2.0, 0.5, 0.5);
+        let hit = bb.clip(from, to).unwrap();
+        assert!((hit.x - 0.0).abs() < 1e-10);
+        assert!((hit.y - 0.5).abs() < 1e-10);
+        assert!((hit.z - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_aabb_clip_miss() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(-1.0, 5.0, 0.5);
+        let to = Vec3::new(2.0, 5.0, 0.5);
+        assert!(bb.clip(from, to).is_none());
+    }
+
+    #[test]
+    fn test_aabb_clip_ray_too_short() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(-2.0, 0.5, 0.5);
+        let to = Vec3::new(-1.5, 0.5, 0.5);
+        assert!(bb.clip(from, to).is_none());
+    }
+
+    #[test]
+    fn test_aabb_clip_from_inside() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(0.5, 0.5, 0.5);
+        let to = Vec3::new(2.0, 0.5, 0.5);
+        let hit = bb.clip(from, to);
+        // Starting inside: t_min will be 0, so hit = from
+        assert!(hit.is_some());
+        let h = hit.unwrap();
+        assert!((h.x - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_aabb_clip_diagonal_hit() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(-1.0, -1.0, -1.0);
+        let to = Vec3::new(0.5, 0.5, 0.5);
+        let hit = bb.clip(from, to).unwrap();
+        // Hit the corner at (0, 0, 0)
+        assert!((hit.x).abs() < 1e-10);
+        assert!((hit.y).abs() < 1e-10);
+        assert!((hit.z).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_aabb_clip_zero_length_ray() {
+        let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+        let from = Vec3::new(0.5, 0.5, 0.5);
+        let to = Vec3::new(0.5, 0.5, 0.5);
+        assert!(bb.clip(from, to).is_none());
     }
 }

@@ -15,6 +15,16 @@ pub trait ChunkPosExt {
     /// Returns the chunk containing the given [`BlockPos`].
     fn from_block_pos(pos: &BlockPos) -> ChunkPos;
 
+    /// Returns the block position at the center of this chunk at the given Y.
+    ///
+    /// Equivalent to vanilla's `getMiddleBlockPosition(int y)`.
+    fn get_middle_block_position(&self, y: i32) -> BlockPos;
+
+    /// Returns the block position at the min corner of this chunk at the given Y.
+    ///
+    /// Equivalent to vanilla's `getWorldPosition()`.
+    fn get_world_position(&self) -> BlockPos;
+
     /// Reads a [`ChunkPos`] from a wire buffer (packed `i64`).
     ///
     /// # Errors
@@ -29,6 +39,14 @@ pub trait ChunkPosExt {
 impl ChunkPosExt for ChunkPos {
     fn from_block_pos(pos: &BlockPos) -> ChunkPos {
         ChunkPos::new(pos.x >> 4, pos.z >> 4)
+    }
+
+    fn get_middle_block_position(&self, y: i32) -> BlockPos {
+        BlockPos::new(self.middle_block_x(), y, self.middle_block_z())
+    }
+
+    fn get_world_position(&self) -> BlockPos {
+        BlockPos::new(self.min_block_x(), 0, self.min_block_z())
     }
 
     fn read(buf: &mut Bytes) -> Result<ChunkPos, TypeError> {
@@ -99,5 +117,38 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = ChunkPos::read(&mut data).unwrap();
         assert_eq!(decoded, pos);
+    }
+
+    // ── get_middle_block_position ───────────────────────────────────────
+
+    #[test]
+    fn test_chunk_pos_get_middle_block_position() {
+        let chunk = ChunkPos::new(0, 0);
+        let mid = chunk.get_middle_block_position(64);
+        assert_eq!(mid, BlockPos::new(7, 64, 7));
+    }
+
+    #[test]
+    fn test_chunk_pos_get_middle_block_position_negative() {
+        let chunk = ChunkPos::new(-1, -1);
+        let mid = chunk.get_middle_block_position(0);
+        // middle_block_x for chunk -1 = -16 + 7 = -9
+        assert_eq!(mid, BlockPos::new(-9, 0, -9));
+    }
+
+    // ── get_world_position ──────────────────────────────────────────────
+
+    #[test]
+    fn test_chunk_pos_get_world_position() {
+        let chunk = ChunkPos::new(2, 3);
+        let world = chunk.get_world_position();
+        assert_eq!(world, BlockPos::new(32, 0, 48));
+    }
+
+    #[test]
+    fn test_chunk_pos_get_world_position_zero() {
+        let chunk = ChunkPos::ZERO;
+        let world = chunk.get_world_position();
+        assert_eq!(world, BlockPos::new(0, 0, 0));
     }
 }

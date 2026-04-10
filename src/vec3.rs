@@ -224,6 +224,17 @@ impl Vec3 {
         types::write_f64(buf, self.y);
         types::write_f64(buf, self.z);
     }
+
+    /// Linear interpolation from `self` to `target` by `delta`.
+    ///
+    /// `delta = 0.0` → `self`, `delta = 1.0` → `target`.
+    pub fn lerp(self, target: Vec3, delta: f64) -> Self {
+        Self::new(
+            self.x + (target.x - self.x) * delta,
+            self.y + (target.y - self.y) * delta,
+            self.z + (target.z - self.z) * delta,
+        )
+    }
 }
 
 impl_vector_ops!(Vec3);
@@ -504,5 +515,35 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = Vec3::read(&mut data).unwrap();
         assert_eq!(decoded, v);
+    }
+
+    // ── lerp ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_vec3_lerp_zero() {
+        let a = Vec3::new(0.0, 0.0, 0.0);
+        let b = Vec3::new(10.0, 20.0, 30.0);
+        let result = a.lerp(b, 0.0);
+        assert_eq!(result, a);
+    }
+
+    #[test]
+    fn test_vec3_lerp_one() {
+        let a = Vec3::new(0.0, 0.0, 0.0);
+        let b = Vec3::new(10.0, 20.0, 30.0);
+        let result = a.lerp(b, 1.0);
+        assert!((result.x - 10.0).abs() < 1e-10);
+        assert!((result.y - 20.0).abs() < 1e-10);
+        assert!((result.z - 30.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_vec3_lerp_half() {
+        let a = Vec3::new(0.0, 0.0, 0.0);
+        let b = Vec3::new(10.0, 20.0, 30.0);
+        let result = a.lerp(b, 0.5);
+        assert!((result.x - 5.0).abs() < 1e-10);
+        assert!((result.y - 10.0).abs() < 1e-10);
+        assert!((result.z - 15.0).abs() < 1e-10);
     }
 }
