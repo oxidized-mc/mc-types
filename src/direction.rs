@@ -248,7 +248,8 @@ impl Direction {
     /// out of range.
     pub fn read(buf: &mut Bytes) -> Result<Self, TypeError> {
         let id = varint::read_varint_buf(buf)?;
-        Direction::from_3d_data_value(id as u8).ok_or(TypeError::UnexpectedEof { need: 1, have: 0 })
+        let id = u8::try_from(id).map_err(|_| TypeError::UnexpectedEof { need: 1, have: 0 })?;
+        Direction::from_3d_data_value(id).ok_or(TypeError::UnexpectedEof { need: 1, have: 0 })
     }
 
     /// Writes this [`Direction`] to a wire buffer as a VarInt.
@@ -723,6 +724,23 @@ mod tests {
             let decoded = Direction::read(&mut data).unwrap();
             assert_eq!(decoded, dir);
         }
+    }
+
+    #[test]
+    fn test_direction_read_rejects_truncated_varint() {
+        // VarInt 256 must be rejected, not silently truncated to u8 0 (Down)
+        let mut buf = BytesMut::new();
+        varint::write_varint_buf(256, &mut buf);
+        let mut data = buf.freeze();
+        assert!(Direction::read(&mut data).is_err());
+    }
+
+    #[test]
+    fn test_direction_read_rejects_negative_varint() {
+        let mut buf = BytesMut::new();
+        varint::write_varint_buf(-1, &mut buf);
+        let mut data = buf.freeze();
+        assert!(Direction::read(&mut data).is_err());
     }
 
     // ── ALL / HORIZONTALS ───────────────────────────────────────────
