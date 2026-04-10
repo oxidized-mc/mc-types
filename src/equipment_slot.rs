@@ -27,6 +27,16 @@ pub enum EquipmentSlotType {
 ///
 /// Wire IDs match vanilla 26.1's non-sequential assignment:
 /// MainHand=0, Feet=1, Legs=2, Chest=3, Head=4, OffHand=5, Body=6, Saddle=7.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::EquipmentSlot;
+///
+/// let slot = EquipmentSlot::by_id(0).unwrap();
+/// assert_eq!(slot, EquipmentSlot::MainHand);
+/// assert_eq!(slot.to_string(), "mainhand");
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EquipmentSlot {
     /// Main hand (wire ID 0).
@@ -308,5 +318,22 @@ mod tests {
     fn test_equipment_slot_display() {
         assert_eq!(format!("{}", EquipmentSlot::MainHand), "mainhand");
         assert_eq!(format!("{}", EquipmentSlot::OffHand), "offhand");
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_equipment_slot_display() {
+            insta::assert_snapshot!(EquipmentSlot::MainHand.to_string(), @"mainhand");
+            insta::assert_snapshot!(EquipmentSlot::OffHand.to_string(), @"offhand");
+            insta::assert_snapshot!(EquipmentSlot::Head.to_string(), @"head");
+            insta::assert_snapshot!(EquipmentSlot::Chest.to_string(), @"chest");
+            insta::assert_snapshot!(EquipmentSlot::Legs.to_string(), @"legs");
+            insta::assert_snapshot!(EquipmentSlot::Feet.to_string(), @"feet");
+            insta::assert_snapshot!(EquipmentSlot::Body.to_string(), @"body");
+        }
     }
 }

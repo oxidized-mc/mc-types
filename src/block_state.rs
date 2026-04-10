@@ -16,6 +16,18 @@ use oxidized_codec::varint;
 /// # Wire format
 ///
 /// Encoded as a VarInt.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::BlockState;
+///
+/// let air = BlockState::AIR;
+/// assert_eq!(air.id(), 0);
+///
+/// let stone = BlockState::new(1);
+/// assert_eq!(stone.id(), 1);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct BlockState(u16);
 
@@ -131,5 +143,36 @@ mod tests {
     #[test]
     fn test_block_state_display() {
         assert_eq!(format!("{}", BlockState::new(42)), "BlockState(42)");
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn block_state_wire_roundtrip(id: u16) {
+                let bs = BlockState::new(id);
+                let mut buf = BytesMut::new();
+                bs.write(&mut buf);
+                let mut data = Bytes::from(buf);
+                let decoded = BlockState::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, bs);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_block_state_display() {
+            insta::assert_snapshot!(BlockState::new(0).to_string(), @"BlockState(0)");
+            insta::assert_snapshot!(BlockState::new(42).to_string(), @"BlockState(42)");
+        }
     }
 }

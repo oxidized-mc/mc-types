@@ -14,6 +14,17 @@ use oxidized_codec::types::{self, TypeError};
 /// # Wire format
 ///
 /// Two consecutive big-endian `f32` values (8 bytes total).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Vec2;
+///
+/// let v = Vec2::new(3.0, 4.0);
+/// assert!((v.length() - 5.0).abs() < 1e-6);
+/// let n = v.normalized();
+/// assert!((n.length() - 1.0).abs() < 1e-6);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec2 {
     /// The X component (often yaw).
@@ -281,5 +292,64 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = Vec2::read(&mut data).unwrap();
         assert_eq!(decoded, v);
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn vec2_normalized_unit_length(
+                x in -1000.0f32..1000.0,
+                y in -1000.0f32..1000.0,
+            ) {
+                prop_assume!(x.abs() + y.abs() > 1e-3);
+                let v = Vec2::new(x, y).normalized();
+                prop_assert!((v.length() - 1.0).abs() < 1e-4);
+            }
+
+            #[test]
+            fn vec2_wire_roundtrip(
+                x in -1e10f32..1e10,
+                y in -1e10f32..1e10,
+            ) {
+                let v = Vec2::new(x, y);
+                let mut buf = BytesMut::new();
+                v.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = Vec2::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, v);
+            }
+
+            #[test]
+            #[test]
+            fn vec2_negate_double_is_identity(
+                x in -1000.0f32..1000.0,
+                y in -1000.0f32..1000.0,
+            ) {
+                let v = Vec2::new(x, y);
+                let result = v.negated().negated();
+                prop_assert_eq!(result, v);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_vec2_display() {
+            insta::assert_snapshot!(Vec2::new(1.5, -2.0).to_string(), @"(1.5, -2)");
+        }
+
+        #[test]
+        fn snapshot_vec2_display_zero() {
+            insta::assert_snapshot!(Vec2::ZERO.to_string(), @"(0, 0)");
+        }
     }
 }

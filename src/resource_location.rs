@@ -30,6 +30,24 @@ const MAX_RESOURCE_LOCATION_LENGTH: usize = 32767;
 ///
 /// If no colon is present when parsing from a string, the default namespace
 /// `"minecraft"` is used.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::ResourceLocation;
+///
+/// // Parse from a string
+/// let loc = ResourceLocation::from_string("minecraft:stone").unwrap();
+/// assert_eq!(loc.namespace(), "minecraft");
+/// assert_eq!(loc.path(), "stone");
+///
+/// // Default namespace
+/// let loc2 = ResourceLocation::from_string("stone").unwrap();
+/// assert_eq!(loc, loc2);
+///
+/// // Display roundtrip
+/// assert_eq!(loc.to_string(), "minecraft:stone");
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResourceLocation {
     namespace: String,
@@ -110,6 +128,15 @@ impl ResourceLocation {
     ///
     /// Panics if `path` contains invalid characters or is empty. Only use
     /// with compile-time-known valid paths.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::ResourceLocation;
+    ///
+    /// let stone = ResourceLocation::minecraft("stone");
+    /// assert_eq!(stone.to_string(), "minecraft:stone");
+    /// ```
     #[must_use]
     #[allow(clippy::expect_used)]
     pub fn minecraft(path: impl Into<String>) -> Self {
@@ -340,5 +367,92 @@ mod tests {
         let mut set = HashSet::new();
         set.insert(a);
         assert!(set.contains(&b));
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn resource_location_parse_display_roundtrip(
+                ns in "[a-z0-9_.]{1,10}",
+                path in "[a-z0-9_./]{1,20}",
+            ) {
+                // Filter out namespace containing ".."
+                prop_assume!(!ns.contains(".."));
+                let input = format!("{ns}:{path}");
+                let loc = ResourceLocation::from_string(&input).unwrap();
+                prop_assert_eq!(loc.to_string(), input);
+            }
+
+            #[test]
+            fn resource_location_wire_roundtrip(
+                ns in "[a-z0-9_.]{1,10}",
+                path in "[a-z0-9_./]{1,20}",
+            ) {
+                prop_assume!(!ns.contains(".."));
+                let loc = ResourceLocation::new(ns, path).unwrap();
+                let mut buf = BytesMut::new();
+                loc.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = ResourceLocation::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, loc);
+            }
+
+            #[test]
+            fn resource_location_default_namespace_when_no_colon(
+                path in "[a-z0-9_.]{1,20}",
+            ) {
+                let loc = ResourceLocation::from_string(&path).unwrap();
+                prop_assert_eq!(loc.namespace(), "minecraft");
+                prop_assert_eq!(loc.path(), path.as_str());
+            }
+        }
+    }
+
+    // ── Compliance tests ────────────────────────────────────────────
+
+    mod compliance {
+        use super::*;
+
+        #[test]
+        fn compliance_resource_location_default_namespace() {
+            let loc = ResourceLocation::from_string("stone").unwrap();
+            assert_eq!(loc.namespace(), "minecraft");
+            assert_eq!(loc.path(), "stone");
+            assert_eq!(loc.to_string(), "minecraft:stone");
+        }
+
+        #[test]
+        fn compliance_resource_location_explicit_minecraft() {
+            let a = ResourceLocation::from_string("stone").unwrap();
+            let b = ResourceLocation::from_string("minecraft:stone").unwrap();
+            assert_eq!(a, b);
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_resource_location_display() {
+            insta::assert_snapshot!(
+                ResourceLocation::minecraft("stone").to_string(),
+                @"minecraft:stone"
+            );
+        }
+
+        #[test]
+        fn snapshot_resource_location_custom_ns() {
+            insta::assert_snapshot!(
+                ResourceLocation::new("mymod", "items/sword").unwrap().to_string(),
+                @"mymod:items/sword"
+            );
+        }
     }
 }

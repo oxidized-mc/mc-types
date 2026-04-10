@@ -8,6 +8,15 @@
 /// # Wire format
 ///
 /// Encoded as a VarInt (0–1).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::HumanoidArm;
+///
+/// let arm = HumanoidArm::by_id(1).unwrap();
+/// assert_eq!(arm, HumanoidArm::Right);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum HumanoidArm {
@@ -110,5 +119,17 @@ mod tests {
     fn test_humanoid_arm_read_empty_buffer() {
         let mut data = Bytes::new();
         assert!(HumanoidArm::read(&mut data).is_err());
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_humanoid_arm_display() {
+            insta::assert_snapshot!(HumanoidArm::Left.to_string(), @"left");
+            insta::assert_snapshot!(HumanoidArm::Right.to_string(), @"right");
+        }
     }
 }

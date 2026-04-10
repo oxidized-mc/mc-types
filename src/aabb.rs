@@ -69,6 +69,16 @@ pub struct Aabb {
 
 impl Aabb {
     /// Creates a new [`Aabb`], auto-correcting so `min <= max` for each axis.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::Aabb;
+    ///
+    /// let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 2.0, 3.0);
+    /// assert_eq!(bb.x_size(), 1.0);
+    /// assert_eq!(bb.y_size(), 2.0);
+    /// ```
     pub fn new(x1: f64, y1: f64, z1: f64, x2: f64, y2: f64, z2: f64) -> Self {
         Self {
             min_x: x1.min(x2),
@@ -208,6 +218,16 @@ impl Aabb {
     }
 
     /// Returns a new [`Aabb`] expanded equally on all sides by `amount`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::Aabb;
+    ///
+    /// let bb = Aabb::new(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    /// let bigger = bb.inflate(0.5);
+    /// assert_eq!(bigger.x_size(), 2.0);
+    /// ```
     pub fn inflate(&self, amount: f64) -> Self {
         self.inflate_xyz(amount, amount, amount)
     }
@@ -881,5 +901,100 @@ mod tests {
         let from = Vec3::new(0.5, 0.5, 0.5);
         let to = Vec3::new(0.5, 0.5, 0.5);
         assert!(bb.clip(from, to).is_none());
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn aabb_inflate_deflate_roundtrip(
+                x1 in -100.0f64..0.0, y1 in -100.0f64..0.0, z1 in -100.0f64..0.0,
+                x2 in 0.0f64..100.0, y2 in 0.0f64..100.0, z2 in 0.0f64..100.0,
+                amount in 0.0f64..10.0,
+            ) {
+                let bb = Aabb::new(x1, y1, z1, x2, y2, z2);
+                let inflated = bb.inflate(amount);
+                let back = inflated.deflate(amount);
+                prop_assert!((back.min_x - bb.min_x).abs() < EPSILON);
+                prop_assert!((back.min_y - bb.min_y).abs() < EPSILON);
+                prop_assert!((back.min_z - bb.min_z).abs() < EPSILON);
+                prop_assert!((back.max_x - bb.max_x).abs() < EPSILON);
+                prop_assert!((back.max_y - bb.max_y).abs() < EPSILON);
+                prop_assert!((back.max_z - bb.max_z).abs() < EPSILON);
+            }
+
+            #[test]
+            fn aabb_center_always_contained(
+                x1 in -100.0f64..0.0, y1 in -100.0f64..0.0, z1 in -100.0f64..0.0,
+                x2 in 0.01f64..100.0, y2 in 0.01f64..100.0, z2 in 0.01f64..100.0,
+            ) {
+                let bb = Aabb::new(x1, y1, z1, x2, y2, z2);
+                let center = bb.get_center();
+                prop_assert!(bb.contains_vec(center));
+            }
+
+            #[test]
+            fn aabb_move_preserves_size(
+                x1 in -100.0f64..0.0, y1 in -100.0f64..0.0, z1 in -100.0f64..0.0,
+                x2 in 0.0f64..100.0, y2 in 0.0f64..100.0, z2 in 0.0f64..100.0,
+                dx in -50.0f64..50.0, dy in -50.0f64..50.0, dz in -50.0f64..50.0,
+            ) {
+                let bb = Aabb::new(x1, y1, z1, x2, y2, z2);
+                let moved = bb.move_by(dx, dy, dz);
+                prop_assert!((moved.x_size() - bb.x_size()).abs() < EPSILON);
+                prop_assert!((moved.y_size() - bb.y_size()).abs() < EPSILON);
+                prop_assert!((moved.z_size() - bb.z_size()).abs() < EPSILON);
+            }
+
+            #[test]
+            fn aabb_intersect_self_is_self(
+                x1 in -100.0f64..0.0, y1 in -100.0f64..0.0, z1 in -100.0f64..0.0,
+                x2 in 0.0f64..100.0, y2 in 0.0f64..100.0, z2 in 0.0f64..100.0,
+            ) {
+                let bb = Aabb::new(x1, y1, z1, x2, y2, z2);
+                let inter = bb.intersect(&bb);
+                prop_assert!((inter.min_x - bb.min_x).abs() < EPSILON);
+                prop_assert!((inter.min_y - bb.min_y).abs() < EPSILON);
+                prop_assert!((inter.min_z - bb.min_z).abs() < EPSILON);
+                prop_assert!((inter.max_x - bb.max_x).abs() < EPSILON);
+                prop_assert!((inter.max_y - bb.max_y).abs() < EPSILON);
+                prop_assert!((inter.max_z - bb.max_z).abs() < EPSILON);
+            }
+
+            #[test]
+            fn aabb_volume_non_negative(
+                x1 in -100.0f64..0.0, y1 in -100.0f64..0.0, z1 in -100.0f64..0.0,
+                x2 in 0.0f64..100.0, y2 in 0.0f64..100.0, z2 in 0.0f64..100.0,
+            ) {
+                let bb = Aabb::new(x1, y1, z1, x2, y2, z2);
+                prop_assert!(bb.volume() >= 0.0);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_aabb_display() {
+            insta::assert_snapshot!(
+                Aabb::new(0.0, 0.0, 0.0, 1.0, 2.0, 3.0).to_string(),
+                @"AABB[0, 0, 0 -> 1, 2, 3]"
+            );
+        }
+
+        #[test]
+        fn snapshot_aabb_display_negative() {
+            insta::assert_snapshot!(
+                Aabb::new(-1.5, -2.5, -3.5, 4.5, 5.5, 6.5).to_string(),
+                @"AABB[-1.5, -2.5, -3.5 -> 4.5, 5.5, 6.5]"
+            );
+        }
     }
 }

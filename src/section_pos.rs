@@ -463,4 +463,69 @@ mod tests {
         let sections: Vec<_> = SectionPos::around_and_at_block_pos(&pos).collect();
         assert!(sections.contains(&center));
     }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn section_pos_packed_roundtrip(
+                x in -2_097_152i32..2_097_151,
+                y in -524_288i32..524_287,
+                z in -2_097_152i32..2_097_151,
+            ) {
+                let pos = SectionPos::new(x, y, z);
+                prop_assert_eq!(SectionPos::from_long(pos.as_long()), pos);
+            }
+
+            #[test]
+            fn section_pos_wire_roundtrip(
+                x in -2_097_152i32..2_097_151,
+                y in -524_288i32..524_287,
+                z in -2_097_152i32..2_097_151,
+            ) {
+                let pos = SectionPos::new(x, y, z);
+                let mut buf = BytesMut::new();
+                pos.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = SectionPos::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, pos);
+            }
+
+            #[test]
+            fn section_pos_block_containment(
+                x in -1_000_000i32..1_000_000,
+                y in -2048i32..2047,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let block = BlockPos::new(x, y, z);
+                let section = SectionPos::of_block_pos(&block);
+                prop_assert!(x >= section.min_block_x() && x <= section.max_block_x());
+                prop_assert!(y >= section.min_block_y() && y <= section.max_block_y());
+                prop_assert!(z >= section.min_block_z() && z <= section.max_block_z());
+            }
+
+            #[test]
+            fn section_pos_block_to_section_roundtrip(block_coord in -1_000_000i32..1_000_000) {
+                let section = SectionPos::block_to_section_coord(block_coord);
+                let min_block = SectionPos::section_to_block_coord(section);
+                prop_assert!(min_block <= block_coord);
+                prop_assert!(block_coord < min_block + SECTION_SIZE);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_section_pos_display() {
+            insta::assert_snapshot!(SectionPos::new(2, -4, 3).to_string(), @"(2, -4, 3)");
+        }
+    }
 }

@@ -10,6 +10,16 @@ use crate::vec3::Vec3;
 /// Matches vanilla `net.minecraft.world.entity.EntityDimensions`.
 /// The bounding box is always centered horizontally; the height extends
 /// upward from the entity's position.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::{EntityDimensions, Vec3};
+///
+/// let dims = EntityDimensions::new(0.6, 1.8);
+/// let bb = dims.make_bounding_box(Vec3::ZERO);
+/// assert!((bb.y_size() - 1.8) < 0.01);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct EntityDimensions {
     /// The width of the entity (diameter of the hitbox in X and Z).
@@ -135,5 +145,50 @@ mod tests {
         let s = format!("{d}");
         assert!(s.contains("0.6"));
         assert!(s.contains("1.8"));
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_entity_dimensions_display() {
+            insta::assert_snapshot!(
+                EntityDimensions::new(0.6, 1.8).to_string(),
+                @"0.6×1.8"
+            );
+        }
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn entity_dimensions_scale_positive(
+                w in 0.1f32..100.0,
+                h in 0.1f32..100.0,
+                factor in 0.01f32..10.0,
+            ) {
+                let d = EntityDimensions::new(w, h).scale(factor);
+                prop_assert!(d.width > 0.0);
+                prop_assert!(d.height > 0.0);
+            }
+
+            #[test]
+            fn entity_dimensions_bounding_box_contains_origin(
+                w in 0.1f32..10.0,
+                h in 0.1f32..10.0,
+            ) {
+                let d = EntityDimensions::new(w, h);
+                let bb = d.make_bounding_box(Vec3::ZERO);
+                // Center of bottom face is at origin
+                prop_assert!(bb.contains(0.0, 0.0, 0.0));
+            }
+        }
     }
 }

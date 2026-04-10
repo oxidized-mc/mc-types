@@ -17,6 +17,19 @@ use crate::resource_location::ResourceLocation;
 /// Two `ResourceKey`s are equal only if both their registry and location match.
 ///
 /// Matches vanilla `net.minecraft.resources.ResourceKey`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::{ResourceKey, ResourceLocation};
+///
+/// struct Block; // phantom type
+/// let key = ResourceKey::<Block>::create(
+///     ResourceLocation::minecraft("block"),
+///     ResourceLocation::minecraft("stone"),
+/// );
+/// assert_eq!(key.location().to_string(), "minecraft:stone");
+/// ```
 pub struct ResourceKey<T> {
     registry: ResourceLocation,
     location: ResourceLocation,

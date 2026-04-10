@@ -17,6 +17,20 @@ use oxidized_codec::varint;
 ///
 /// Values 0–5 map to Down, Up, North, South, West, East and are used
 /// directly as wire IDs in many packets.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Direction;
+///
+/// let dir = Direction::North;
+/// assert_eq!(dir.opposite(), Direction::South);
+/// assert_eq!(dir.name(), "north");
+///
+/// // Y-rotation mapping (vanilla compass)
+/// assert_eq!(Direction::from_y_rot(0.0), Direction::South);
+/// assert_eq!(Direction::from_y_rot(90.0), Direction::West);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum Direction {
@@ -780,5 +794,78 @@ mod tests {
         assert!(!Plane::Horizontal.test(Direction::Up));
         assert!(Plane::Vertical.test(Direction::Up));
         assert!(!Plane::Vertical.test(Direction::East));
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use crate::direction::ALL;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn direction_opposite_involution(dir_idx in 0u8..6) {
+                let dir = ALL[dir_idx as usize];
+                prop_assert_eq!(dir.opposite().opposite(), dir);
+            }
+
+            #[test]
+            fn direction_step_magnitude_one(dir_idx in 0u8..6) {
+                let dir = ALL[dir_idx as usize];
+                let sum = dir.step_x().abs() + dir.step_y().abs() + dir.step_z().abs();
+                prop_assert_eq!(sum, 1);
+            }
+        }
+    }
+
+    // ── Compliance tests ────────────────────────────────────────────
+
+    mod compliance {
+        use super::*;
+
+        #[test]
+        fn compliance_direction_y_rotation_mapping() {
+            assert_eq!(Direction::from_y_rot(0.0), Direction::South);
+            assert_eq!(Direction::from_y_rot(90.0), Direction::West);
+            assert_eq!(Direction::from_y_rot(180.0), Direction::North);
+            assert_eq!(Direction::from_y_rot(270.0), Direction::East);
+        }
+
+        #[test]
+        fn compliance_direction_y_rotation_wraps() {
+            assert_eq!(Direction::from_y_rot(360.0), Direction::South);
+            assert_eq!(Direction::from_y_rot(-90.0), Direction::East);
+        }
+
+        #[test]
+        fn compliance_direction_names_lowercase() {
+            for dir in &crate::direction::ALL {
+                let name = dir.name();
+                assert_eq!(name, name.to_lowercase());
+            }
+        }
+
+        #[test]
+        fn compliance_direction_display_matches_name() {
+            for dir in &crate::direction::ALL {
+                assert_eq!(dir.to_string(), dir.name());
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_direction_display() {
+            insta::assert_snapshot!(Direction::North.to_string(), @"north");
+            insta::assert_snapshot!(Direction::South.to_string(), @"south");
+            insta::assert_snapshot!(Direction::East.to_string(), @"east");
+            insta::assert_snapshot!(Direction::West.to_string(), @"west");
+            insta::assert_snapshot!(Direction::Up.to_string(), @"up");
+            insta::assert_snapshot!(Direction::Down.to_string(), @"down");
+        }
     }
 }

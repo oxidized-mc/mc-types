@@ -8,6 +8,15 @@
 /// # Wire format
 ///
 /// Encoded as a VarInt (0–2).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::ChatVisibility;
+///
+/// let vis = ChatVisibility::by_id(0).unwrap();
+/// assert_eq!(vis, ChatVisibility::Full);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum ChatVisibility {
@@ -87,5 +96,18 @@ mod tests {
     fn test_chat_visibility_read_invalid_varint() {
         let mut data = Bytes::new();
         assert!(ChatVisibility::read(&mut data).is_err());
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_chat_visibility_display() {
+            insta::assert_snapshot!(ChatVisibility::Full.to_string(), @"full");
+            insta::assert_snapshot!(ChatVisibility::System.to_string(), @"system");
+            insta::assert_snapshot!(ChatVisibility::Hidden.to_string(), @"hidden");
+        }
     }
 }

@@ -11,6 +11,18 @@ use oxidized_types::ChunkPos;
 use crate::block_pos::BlockPos;
 
 /// Wire-format extension methods for [`ChunkPos`].
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::{BlockPos, chunk_pos::ChunkPosExt};
+/// use oxidized_types::ChunkPos;
+///
+/// let block = BlockPos::new(32, 64, 48);
+/// let chunk = ChunkPos::from_block_pos(&block);
+/// assert_eq!(chunk.x, 2);
+/// assert_eq!(chunk.z, 3);
+/// ```
 pub trait ChunkPosExt {
     /// Returns the chunk containing the given [`BlockPos`].
     fn from_block_pos(pos: &BlockPos) -> ChunkPos;
@@ -150,5 +162,38 @@ mod tests {
         let chunk = ChunkPos::ZERO;
         let world = chunk.get_world_position();
         assert_eq!(world, BlockPos::new(0, 0, 0));
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn chunk_pos_block_containment(
+                x in -1_000_000i32..1_000_000,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let block = BlockPos::new(x, 64, z);
+                let chunk = ChunkPos::from_block_pos(&block);
+                let world = chunk.get_world_position();
+                // Block must be within the 16×16 region of its chunk
+                prop_assert!(x >= world.x && x < world.x + 16);
+                prop_assert!(z >= world.z && z < world.z + 16);
+            }
+
+            #[test]
+            fn chunk_pos_from_block_consistent(
+                x in -1_000_000i32..1_000_000,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let block = BlockPos::new(x, 0, z);
+                let chunk = ChunkPos::from_block_pos(&block);
+                prop_assert_eq!(chunk.x, x >> 4);
+                prop_assert_eq!(chunk.z, z >> 4);
+            }
+        }
     }
 }

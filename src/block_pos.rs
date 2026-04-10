@@ -95,6 +95,16 @@ impl BlockPos {
     }
 
     /// Packs this position into a 64-bit integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::BlockPos;
+    ///
+    /// let pos = BlockPos::new(1, 2, 3);
+    /// let packed = pos.as_long();
+    /// assert_eq!(BlockPos::from_long(packed), pos);
+    /// ```
     pub const fn as_long(&self) -> i64 {
         ((self.x as i64 & PACKED_X_MASK) << X_OFFSET)
             | ((self.z as i64 & PACKED_Z_MASK) << Z_OFFSET)
@@ -115,6 +125,15 @@ impl BlockPos {
     /// Returns the block position containing the given floating-point coordinates.
     ///
     /// Each component is floored to the nearest integer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::BlockPos;
+    ///
+    /// let pos = BlockPos::containing(10.7, -0.3, 5.0);
+    /// assert_eq!(pos, BlockPos::new(10, -1, 5));
+    /// ```
     pub fn containing(x: f64, y: f64, z: f64) -> Self {
         Self::new(x.floor() as i32, y.floor() as i32, z.floor() as i32)
     }
@@ -124,6 +143,15 @@ impl BlockPos {
     /// Uses wrapping arithmetic to match vanilla Java behavior.
     /// In practice, Minecraft coordinates are bounded by the world border (±30M)
     /// and overflow cannot occur with valid game coordinates.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::BlockPos;
+    ///
+    /// let pos = BlockPos::new(10, 64, -30);
+    /// assert_eq!(pos.offset(1, 0, -1), BlockPos::new(11, 64, -31));
+    /// ```
     pub const fn offset(self, dx: i32, dy: i32, dz: i32) -> Self {
         Self::new(
             self.x.wrapping_add(dx),
@@ -182,6 +210,15 @@ impl BlockPos {
     }
 
     /// Returns the center of this block as a [`Vec3`] (each component + 0.5).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::{BlockPos, Vec3};
+    ///
+    /// let center = BlockPos::new(10, 64, -30).get_center();
+    /// assert_eq!(center, Vec3::new(10.5, 64.5, -29.5));
+    /// ```
     pub fn get_center(&self) -> Vec3 {
         Vec3::new(
             f64::from(self.x) + 0.5,
@@ -568,6 +605,142 @@ mod tests {
                 d <= i64::from(distance),
                 "pos {pos:?} has manhattan dist {d}"
             );
+        }
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn block_pos_packed_roundtrip(
+                x in -33_554_432i32..33_554_431,
+                y in -2048i32..2047,
+                z in -33_554_432i32..33_554_431,
+            ) {
+                let pos = BlockPos::new(x, y, z);
+                prop_assert_eq!(BlockPos::from_long(pos.as_long()), pos);
+            }
+
+            #[test]
+            fn block_pos_wire_roundtrip(
+                x in -33_554_432i32..33_554_431,
+                y in -2048i32..2047,
+                z in -33_554_432i32..33_554_431,
+            ) {
+                let pos = BlockPos::new(x, y, z);
+                let mut buf = BytesMut::new();
+                pos.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = BlockPos::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, pos);
+            }
+
+            #[test]
+            fn block_pos_offset_reversal(
+                x in -1_000_000i32..1_000_000,
+                y in -2048i32..2047,
+                z in -1_000_000i32..1_000_000,
+                dx in -1000i32..1000,
+                dy in -1000i32..1000,
+                dz in -1000i32..1000,
+            ) {
+                let pos = BlockPos::new(x, y, z);
+                let moved = pos.offset(dx, dy, dz);
+                let back = moved.offset(-dx, -dy, -dz);
+                prop_assert_eq!(back, pos);
+            }
+
+            #[test]
+            fn block_pos_to_chunk_containment(
+                x in -1_000_000i32..1_000_000,
+                y in -2048i32..2047,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let block = BlockPos::new(x, y, z);
+                let section = crate::SectionPos::of_block_pos(&block);
+                prop_assert!(x >= section.min_block_x() && x <= section.max_block_x());
+                prop_assert!(z >= section.min_block_z() && z <= section.max_block_z());
+            }
+
+            #[test]
+            fn block_pos_containing_floors(
+                x in -1_000_000.0f64..1_000_000.0,
+                y in -2048.0f64..2047.0,
+                z in -1_000_000.0f64..1_000_000.0,
+            ) {
+                let pos = BlockPos::containing(x, y, z);
+                prop_assert_eq!(pos.x, x.floor() as i32);
+                prop_assert_eq!(pos.y, y.floor() as i32);
+                prop_assert_eq!(pos.z, z.floor() as i32);
+            }
+        }
+    }
+
+    // ── Compliance tests ────────────────────────────────────────────
+
+    mod compliance {
+        use super::*;
+
+        #[test]
+        fn compliance_block_pos_packed_origin() {
+            assert_eq!(BlockPos::from_long(0), BlockPos::new(0, 0, 0));
+            assert_eq!(BlockPos::new(0, 0, 0).as_long(), 0);
+        }
+
+        #[test]
+        fn compliance_block_pos_packed_known_vanilla_values() {
+            // X=1 at bit 38
+            assert_eq!(BlockPos::new(1, 0, 0).as_long(), 1_i64 << 38);
+            // Z=1 at bit 12
+            assert_eq!(BlockPos::new(0, 0, 1).as_long(), 1_i64 << 12);
+            // Y=1 at bit 0
+            assert_eq!(BlockPos::new(0, 1, 0).as_long(), 1_i64);
+        }
+
+        #[test]
+        fn compliance_block_pos_packed_max_range() {
+            let max = BlockPos::new(33_554_431, 2047, 33_554_431);
+            assert_eq!(BlockPos::from_long(max.as_long()), max);
+            let min = BlockPos::new(-33_554_432, -2048, -33_554_432);
+            assert_eq!(BlockPos::from_long(min.as_long()), min);
+        }
+
+        #[test]
+        fn compliance_section_index_overworld_bounds() {
+            // Overworld: Y ranges from -64 to 319, min_section_y = -4
+            // section_index = (block_y >> 4) - min_section_y
+            let bottom = BlockPos::new(0, -64, 0);
+            assert_eq!((bottom.y >> 4) - (-4), 0);
+            let top = BlockPos::new(0, 319, 0);
+            assert_eq!((top.y >> 4) - (-4), 23);
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_block_pos_display() {
+            insta::assert_snapshot!(BlockPos::new(10, 64, -20).to_string(), @"(10, 64, -20)");
+        }
+
+        #[test]
+        fn snapshot_block_pos_display_negative() {
+            insta::assert_snapshot!(
+                BlockPos::new(-100, -64, -200).to_string(),
+                @"(-100, -64, -200)"
+            );
+        }
+
+        #[test]
+        fn snapshot_block_pos_display_zero() {
+            insta::assert_snapshot!(BlockPos::ZERO.to_string(), @"(0, 0, 0)");
         }
     }
 }

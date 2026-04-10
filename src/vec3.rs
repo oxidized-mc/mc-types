@@ -17,6 +17,18 @@ use crate::vec3i::Vec3i;
 /// # Wire format
 ///
 /// Three consecutive big-endian `f64` values (24 bytes total).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Vec3;
+///
+/// let v = Vec3::new(1.0, 2.0, 3.0);
+/// assert_eq!(v.length_sqr(), 14.0);
+///
+/// let normalized = v.normalize();
+/// assert!((normalized.length() - 1.0).abs() < 1e-9);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
     /// The X component.
@@ -97,6 +109,16 @@ impl Vec3 {
     }
 
     /// Returns the dot product of this vector and `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::Vec3;
+    ///
+    /// let a = Vec3::new(1.0, 0.0, 0.0);
+    /// let b = Vec3::new(0.0, 1.0, 0.0);
+    /// assert_eq!(a.dot(b), 0.0); // perpendicular
+    /// ```
     pub fn dot(self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -113,6 +135,16 @@ impl Vec3 {
     /// Returns the normalized (unit-length) vector.
     ///
     /// Returns [`Vec3::ZERO`] if the length is less than `1e-8`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use oxidized_mc_types::Vec3;
+    ///
+    /// let v = Vec3::new(3.0, 0.0, 4.0);
+    /// let n = v.normalize();
+    /// assert!((n.length() - 1.0).abs() < 1e-9);
+    /// ```
     pub fn normalize(self) -> Self {
         let len = self.length();
         if len < 1e-8 {
@@ -545,5 +577,100 @@ mod tests {
         assert!((result.x - 5.0).abs() < 1e-10);
         assert!((result.y - 10.0).abs() < 1e-10);
         assert!((result.z - 15.0).abs() < 1e-10);
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn vec3_normalize_unit_length(
+                x in -1000.0f64..1000.0,
+                y in -1000.0f64..1000.0,
+                z in -1000.0f64..1000.0,
+            ) {
+                prop_assume!(x.abs() + y.abs() + z.abs() > 1e-6);
+                let v = Vec3::new(x, y, z).normalize();
+                prop_assert!((v.length() - 1.0).abs() < 1e-9);
+            }
+
+            #[test]
+            fn vec3_add_sub_identity(
+                x in -1000.0f64..1000.0,
+                y in -1000.0f64..1000.0,
+                z in -1000.0f64..1000.0,
+            ) {
+                let v = Vec3::new(x, y, z);
+                let result = v.add_vec(Vec3::ZERO);
+                prop_assert_eq!(result, v);
+            }
+
+            #[test]
+            fn vec3_negate_double_is_identity(
+                x in -1000.0f64..1000.0,
+                y in -1000.0f64..1000.0,
+                z in -1000.0f64..1000.0,
+            ) {
+                let v = Vec3::new(x, y, z);
+                let result = v.negate().negate();
+                prop_assert_eq!(result, v);
+            }
+
+            #[test]
+            fn vec3_wire_roundtrip(
+                x in -1e15f64..1e15,
+                y in -1e15f64..1e15,
+                z in -1e15f64..1e15,
+            ) {
+                let v = Vec3::new(x, y, z);
+                let mut buf = BytesMut::new();
+                v.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = Vec3::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, v);
+            }
+
+            #[test]
+            fn vec3_dot_self_equals_length_sqr(
+                x in -1000.0f64..1000.0,
+                y in -1000.0f64..1000.0,
+                z in -1000.0f64..1000.0,
+            ) {
+                let v = Vec3::new(x, y, z);
+                prop_assert!((v.dot(v) - v.length_sqr()).abs() < 1e-6);
+            }
+
+            #[test]
+            fn vec3_lerp_endpoints(
+                x1 in -100.0f64..100.0, y1 in -100.0f64..100.0, z1 in -100.0f64..100.0,
+                x2 in -100.0f64..100.0, y2 in -100.0f64..100.0, z2 in -100.0f64..100.0,
+            ) {
+                let a = Vec3::new(x1, y1, z1);
+                let b = Vec3::new(x2, y2, z2);
+                let at_zero = a.lerp(b, 0.0);
+                prop_assert!((at_zero.x - a.x).abs() < 1e-10);
+                prop_assert!((at_zero.y - a.y).abs() < 1e-10);
+                prop_assert!((at_zero.z - a.z).abs() < 1e-10);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_vec3_display() {
+            insta::assert_snapshot!(Vec3::new(1.5, -2.0, 3.25).to_string(), @"(1.5, -2, 3.25)");
+        }
+
+        #[test]
+        fn snapshot_vec3_display_zero() {
+            insta::assert_snapshot!(Vec3::ZERO.to_string(), @"(0, 0, 0)");
+        }
     }
 }

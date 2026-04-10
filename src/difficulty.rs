@@ -8,6 +8,16 @@
 /// # Wire format
 ///
 /// Encoded as a VarInt (0–3).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Difficulty;
+///
+/// let d = Difficulty::by_id(2).unwrap();
+/// assert_eq!(d, Difficulty::Normal);
+/// assert_eq!(d.to_string(), "normal");
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum Difficulty {
@@ -102,6 +112,35 @@ mod tests {
             let mut data = buf.freeze();
             let decoded = Difficulty::read(&mut data).unwrap();
             assert_eq!(decoded, d);
+        }
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn difficulty_id_roundtrip(id in 0i32..4) {
+                let d = Difficulty::by_id(id).unwrap();
+                prop_assert_eq!(d.id(), id);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_difficulty_display() {
+            insta::assert_snapshot!(Difficulty::Peaceful.to_string(), @"peaceful");
+            insta::assert_snapshot!(Difficulty::Easy.to_string(), @"easy");
+            insta::assert_snapshot!(Difficulty::Normal.to_string(), @"normal");
+            insta::assert_snapshot!(Difficulty::Hard.to_string(), @"hard");
         }
     }
 }

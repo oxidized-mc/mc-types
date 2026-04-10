@@ -7,6 +7,15 @@ use crate::equipment_slot::EquipmentSlot;
 /// Which hand the player is using.
 ///
 /// Encoded as a VarInt in interaction-related packets.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::InteractionHand;
+///
+/// let hand = InteractionHand::by_id(0).unwrap();
+/// assert_eq!(hand, InteractionHand::MainHand);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum InteractionHand {
@@ -108,5 +117,17 @@ mod tests {
     fn test_interaction_hand_display() {
         assert_eq!(format!("{}", InteractionHand::MainHand), "main_hand");
         assert_eq!(format!("{}", InteractionHand::OffHand), "off_hand");
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_interaction_hand_display() {
+            insta::assert_snapshot!(InteractionHand::MainHand.to_string(), @"main_hand");
+            insta::assert_snapshot!(InteractionHand::OffHand.to_string(), @"off_hand");
+        }
     }
 }

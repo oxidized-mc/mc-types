@@ -15,6 +15,20 @@ use oxidized_codec::types::{self, TypeError};
 /// # Wire format
 ///
 /// Three consecutive big-endian `f32` values (12 bytes total).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Rotations;
+///
+/// let r = Rotations::new(45.0, 90.0, 0.0);
+/// assert_eq!(r.x, 45.0);
+///
+/// // Values wrap to [0, 360)
+/// let wrapped = Rotations::new(370.0, -10.0, 0.0);
+/// assert!((wrapped.x - 10.0).abs() < 1e-6);
+/// assert!((wrapped.y - 350.0).abs() < 1e-6);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rotations {
     /// Rotation around the X axis (pitch) in degrees.
@@ -153,5 +167,65 @@ mod tests {
         assert!(s.contains("10"));
         assert!(s.contains("20"));
         assert!(s.contains("30"));
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn rotations_wire_roundtrip(
+                x in -1000.0f32..1000.0,
+                y in -1000.0f32..1000.0,
+                z in -1000.0f32..1000.0,
+            ) {
+                let r = Rotations::new(x, y, z);
+                let mut buf = BytesMut::new();
+                r.write(&mut buf);
+                let mut data = Bytes::from(buf);
+                let decoded = Rotations::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, r);
+            }
+
+            #[test]
+            fn rotations_new_is_idempotent(
+                x in -1000.0f32..1000.0,
+                y in -1000.0f32..1000.0,
+                z in -1000.0f32..1000.0,
+            ) {
+                let r = Rotations::new(x, y, z);
+                let r2 = Rotations::new(r.x, r.y, r.z);
+                prop_assert_eq!(r, r2);
+            }
+
+            #[test]
+            fn rotations_sanitize_range(
+                x in -1000.0f32..1000.0,
+                y in -1000.0f32..1000.0,
+                z in -1000.0f32..1000.0,
+            ) {
+                let r = Rotations::new(x, y, z);
+                prop_assert!(r.x >= 0.0 && r.x < 360.0);
+                prop_assert!(r.y >= 0.0 && r.y < 360.0);
+                prop_assert!(r.z >= 0.0 && r.z < 360.0);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_rotations_display() {
+            insta::assert_snapshot!(
+                Rotations::new(10.0, 20.0, 30.0).to_string(),
+                @"(10, 20, 30)"
+            );
+        }
     }
 }

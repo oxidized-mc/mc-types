@@ -8,6 +8,15 @@
 /// # Wire format
 ///
 /// Encoded as a VarInt (0–2).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::ParticleStatus;
+///
+/// let ps = ParticleStatus::by_id(1).unwrap();
+/// assert_eq!(ps, ParticleStatus::Decreased);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum ParticleStatus {
@@ -87,5 +96,18 @@ mod tests {
     fn test_particle_status_read_empty_buffer() {
         let mut data = Bytes::new();
         assert!(ParticleStatus::read(&mut data).is_err());
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_particle_status_display() {
+            insta::assert_snapshot!(ParticleStatus::All.to_string(), @"all");
+            insta::assert_snapshot!(ParticleStatus::Decreased.to_string(), @"decreased");
+            insta::assert_snapshot!(ParticleStatus::Minimal.to_string(), @"minimal");
+        }
     }
 }

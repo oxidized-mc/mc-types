@@ -17,6 +17,16 @@ use crate::direction::{Axis, Direction};
 /// # Wire format
 ///
 /// Three consecutive VarInts (x, y, z).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Vec3i;
+///
+/// let v = Vec3i::new(1, 2, 3);
+/// let moved = v.offset(10, 20, 30);
+/// assert_eq!(moved, Vec3i::new(11, 22, 33));
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Vec3i {
     /// The X component.
@@ -392,5 +402,72 @@ mod tests {
         let mut data = buf.freeze();
         let decoded = Vec3i::read(&mut data).unwrap();
         assert_eq!(decoded, v);
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn vec3i_wire_roundtrip(
+                x in -1_000_000i32..1_000_000,
+                y in -1_000_000i32..1_000_000,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let v = Vec3i::new(x, y, z);
+                let mut buf = BytesMut::new();
+                v.write(&mut buf);
+                let mut data = buf.freeze();
+                let decoded = Vec3i::read(&mut data).unwrap();
+                prop_assert_eq!(decoded, v);
+            }
+
+            #[test]
+            fn vec3i_from_block_pos_roundtrip(
+                x in -1_000_000i32..1_000_000,
+                y in -2048i32..2047,
+                z in -1_000_000i32..1_000_000,
+            ) {
+                let block = crate::BlockPos::new(x, y, z);
+                let v: Vec3i = block.into();
+                prop_assert_eq!(v.x, block.x);
+                prop_assert_eq!(v.y, block.y);
+                prop_assert_eq!(v.z, block.z);
+            }
+
+            #[test]
+            fn vec3i_offset_reversal(
+                x in -100_000i32..100_000,
+                y in -100_000i32..100_000,
+                z in -100_000i32..100_000,
+                dx in -1000i32..1000,
+                dy in -1000i32..1000,
+                dz in -1000i32..1000,
+            ) {
+                let v = Vec3i::new(x, y, z);
+                let moved = v.offset(dx, dy, dz);
+                let back = moved.offset(-dx, -dy, -dz);
+                prop_assert_eq!(back, v);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_vec3i_display() {
+            insta::assert_snapshot!(Vec3i::new(1, -2, 3).to_string(), @"(1, -2, 3)");
+        }
+
+        #[test]
+        fn snapshot_vec3i_display_zero() {
+            insta::assert_snapshot!(Vec3i::ZERO.to_string(), @"(0, 0, 0)");
+        }
     }
 }

@@ -9,6 +9,15 @@
 /// entity metadata packets.
 ///
 /// All 18 variants match vanilla 26.1's `net.minecraft.world.entity.Pose`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::Pose;
+///
+/// let p = Pose::by_id(0).unwrap();
+/// assert_eq!(p, Pose::Standing);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum Pose {
@@ -159,5 +168,33 @@ mod tests {
     fn test_pose_display() {
         assert_eq!(format!("{}", Pose::Standing), "standing");
         assert_eq!(format!("{}", Pose::SpinAttack), "spin_attack");
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn pose_id_roundtrip(id in 0i32..18) {
+                let pose = Pose::by_id(id).unwrap();
+                prop_assert_eq!(pose.id(), id);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_pose_display() {
+            insta::assert_snapshot!(Pose::Standing.to_string(), @"standing");
+            insta::assert_snapshot!(Pose::Crouching.to_string(), @"crouching");
+            insta::assert_snapshot!(Pose::SpinAttack.to_string(), @"spin_attack");
+        }
     }
 }

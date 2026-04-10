@@ -8,6 +8,18 @@ use crate::resource_location::ResourceLocation;
 /// A block position qualified by a dimension (e.g. `minecraft:overworld` + BlockPos).
 ///
 /// Matches vanilla `net.minecraft.core.GlobalPos`.
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::{GlobalPos, BlockPos, ResourceLocation};
+///
+/// let pos = GlobalPos::new(
+///     ResourceLocation::minecraft("overworld"),
+///     BlockPos::new(100, 64, -200),
+/// );
+/// assert_eq!(pos.to_string(), "minecraft:overworld (100, 64, -200)");
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GlobalPos {
     /// The dimension this position belongs to (e.g. `minecraft:overworld`).
@@ -107,5 +119,20 @@ mod tests {
         let mut set = HashSet::new();
         set.insert(gp1);
         assert!(set.contains(&gp2));
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_global_pos_display() {
+            let gp = GlobalPos::new(
+                ResourceLocation::minecraft("overworld"),
+                BlockPos::new(100, 64, -200),
+            );
+            insta::assert_snapshot!(gp.to_string(), @"minecraft:overworld (100, 64, -200)");
+        }
     }
 }

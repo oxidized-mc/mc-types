@@ -1,0 +1,36 @@
+[package]
+name = "oxidized-mc-types-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.oxidized-mc-types]
+path = ".."
+
+[dependencies.bytes]
+version = "1"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_resource_location"
+path = "fuzz_targets/fuzz_resource_location.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_block_pos_packed"
+path = "fuzz_targets/fuzz_block_pos_packed.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_section_pos_packed"
+path = "fuzz_targets/fuzz_section_pos_packed.rs"
+doc = false

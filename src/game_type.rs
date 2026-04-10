@@ -8,6 +8,17 @@
 /// # Wire format
 ///
 /// Encoded as a VarInt (0–3).
+///
+/// # Examples
+///
+/// ```
+/// use oxidized_mc_types::GameType;
+///
+/// let gt = GameType::by_id(0).unwrap();
+/// assert_eq!(gt, GameType::Survival);
+/// assert_eq!(gt.id(), 0);
+/// assert_eq!(gt.to_string(), "survival");
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(i32)]
 pub enum GameType {
@@ -160,6 +171,35 @@ mod tests {
             let mut data = buf.freeze();
             let decoded = GameType::read(&mut data).unwrap();
             assert_eq!(decoded, gt);
+        }
+    }
+
+    // ── Property-based tests ────────────────────────────────────────
+
+    mod prop {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            #[test]
+            fn game_type_id_roundtrip(id in 0i32..4) {
+                let gt = GameType::by_id(id).unwrap();
+                prop_assert_eq!(gt.id(), id);
+            }
+        }
+    }
+
+    // ── Snapshot tests ──────────────────────────────────────────────
+
+    mod snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_game_type_display() {
+            insta::assert_snapshot!(GameType::Survival.to_string(), @"survival");
+            insta::assert_snapshot!(GameType::Creative.to_string(), @"creative");
+            insta::assert_snapshot!(GameType::Adventure.to_string(), @"adventure");
+            insta::assert_snapshot!(GameType::Spectator.to_string(), @"spectator");
         }
     }
 }
